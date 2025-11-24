@@ -25,7 +25,7 @@ export function createNavbar() {
     </div>
   `;
 
-  // Event listeners
+  // Event listeners.
   navbar.querySelectorAll('[data-link]').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
