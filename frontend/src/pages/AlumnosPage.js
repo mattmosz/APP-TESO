@@ -121,11 +121,12 @@ const AlumnosPage = {
       `
         <form id="alumno-form">
           <div class="form-group">
-            <label class="form-label" for="nombreCompleto">Nombre Completo</label>
+            <label class="form-label" for="nombreCompleto">Nombre Completo (Apellidos, Nombres)</label>
             <input 
               type="text" 
               id="nombreCompleto" 
               class="form-input" 
+              placeholder="Ej: García López, María José"
               value="${alumno?.nombreCompleto || ''}"
               required
             >
