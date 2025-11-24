@@ -9,7 +9,7 @@ export function createNavbar() {
   navbar.className = 'navbar';
   navbar.innerHTML = `
     <div class="navbar-content">
-      <div class="navbar-brand">💰 Tesorería 8vo C</div>
+      <div class="navbar-brand">Tesorería 8vo C</div>
       <div class="navbar-menu">
         <a href="/dashboard" class="navbar-link ${currentPath === '/dashboard' ? 'active' : ''}" data-link>Dashboard</a>
         <a href="/alumnos" class="navbar-link ${currentPath === '/alumnos' ? 'active' : ''}" data-link>Alumnos</a>
