@@ -75,24 +75,44 @@ router.get('/deudores', async (req, res) => {
     
     for (const actividad of actividades) {
       const pagos = await Pago.find({ actividad: actividad._id });
-      const alumnosQuePagaron = pagos.map(p => p.alumno.toString());
       
-      const deudores = alumnos.filter(
-        alumno => !alumnosQuePagaron.includes(alumno._id.toString())
-      );
+      // Calcular total recaudado para esta actividad
+      const totalRecaudado = pagos.reduce((sum, pago) => sum + pago.monto, 0);
+      const totalEsperado = actividad.totalActividad || (actividad.cuotaIndividual * alumnos.length);
+      const faltante = totalEsperado - totalRecaudado;
       
-      if (deudores.length > 0) {
+      const deudores = [];
+      
+      for (const alumno of alumnos) {
+        // Sumar todos los pagos de este alumno para esta actividad
+        const pagosAlumno = pagos.filter(p => p.alumno.toString() === alumno._id.toString());
+        const totalPagado = pagosAlumno.reduce((sum, pago) => sum + pago.monto, 0);
+        const deuda = actividad.cuotaIndividual - totalPagado;
+        
+        if (deuda > 0) {
+          deudores.push({
+            id: alumno._id,
+            nombreCompleto: alumno.nombreCompleto,
+            totalPagado: totalPagado,
+            montoPendiente: deuda,
+            porcentajePagado: Math.round((totalPagado / actividad.cuotaIndividual) * 100)
+          });
+        }
+      }
+      
+      if (deudores.length > 0 || faltante > 0) {
         reporte.push({
           actividad: {
             id: actividad._id,
             nombre: actividad.nombre,
             cuotaIndividual: actividad.cuotaIndividual,
+            totalActividad: totalEsperado,
+            totalRecaudado: totalRecaudado,
+            faltante: faltante,
+            porcentajeCompletado: Math.round((totalRecaudado / totalEsperado) * 100),
             fechaMaximaPago: actividad.fechaMaximaPago
           },
-          deudores: deudores.map(d => ({
-            id: d._id,
-            nombreCompleto: d.nombreCompleto
-          })),
+          deudores: deudores,
           cantidadDeudores: deudores.length
         });
       }

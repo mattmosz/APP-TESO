@@ -65,22 +65,37 @@ const ReportesPage = {
               <span class="badge badge-warning">${reporte.cantidadDeudores} deudor(es)</span>
             </h3>
             <p class="text-light mb-2">
-              <strong>Cuota:</strong> ${this.formatMoney(reporte.actividad.cuotaIndividual)} |
+              <strong>Cuota individual:</strong> ${this.formatMoney(reporte.actividad.cuotaIndividual)} |
+              <strong>Total actividad:</strong> ${this.formatMoney(reporte.actividad.totalActividad)} |
               <strong>Fecha límite:</strong> ${this.formatDate(reporte.actividad.fechaMaximaPago)}
             </p>
+            <div class="alert alert-info mb-2">
+              <strong>Progreso de la actividad:</strong><br>
+              Recaudado: ${this.formatMoney(reporte.actividad.totalRecaudado)} de ${this.formatMoney(reporte.actividad.totalActividad)}
+              (${reporte.actividad.porcentajeCompletado}%) |
+              <strong>Falta:</strong> ${this.formatMoney(reporte.actividad.faltante)}
+            </div>
             <div class="table-container">
               <table class="table">
                 <thead>
                   <tr>
                     <th>Alumno</th>
-                    <th>Monto Adeudado</th>
+                    <th>Pagado</th>
+                    <th>Pendiente</th>
+                    <th>Progreso</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${reporte.deudores.map(alumno => `
                     <tr>
                       <td>${alumno.nombreCompleto}</td>
-                      <td>${this.formatMoney(reporte.actividad.cuotaIndividual)}</td>
+                      <td>${this.formatMoney(alumno.totalPagado)}</td>
+                      <td>${this.formatMoney(alumno.montoPendiente)}</td>
+                      <td>
+                        <span class="badge ${alumno.porcentajePagado > 0 ? 'badge-warning' : 'badge-danger'}">
+                          ${alumno.porcentajePagado}%
+                        </span>
+                      </td>
                     </tr>
                   `).join('')}
                 </tbody>

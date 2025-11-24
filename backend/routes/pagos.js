@@ -55,9 +55,6 @@ router.post('/', async (req, res) => {
     await pago.populate('actividad', 'nombre cuotaIndividual');
     res.status(201).json(pago);
   } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ error: 'Este alumno ya realizó el pago de esta actividad' });
-    }
     res.status(400).json({ error: error.message });
   }
 });

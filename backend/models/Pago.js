@@ -28,7 +28,4 @@ const pagoSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Índice compuesto para evitar pagos duplicados
-pagoSchema.index({ alumno: 1, actividad: 1 }, { unique: true });
-
 export default mongoose.model('Pago', pagoSchema);

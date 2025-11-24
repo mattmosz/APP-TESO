@@ -15,6 +15,11 @@ const actividadSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  totalActividad: {
+    type: Number,
+    required: true,
+    min: 0
+  },
   fechaMaximaPago: {
     type: Date,
     required: true

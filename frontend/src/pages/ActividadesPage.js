@@ -62,6 +62,7 @@ const ActividadesPage = {
                 <th>Nombre</th>
                 <th>Fecha</th>
                 <th>Cuota</th>
+                <th>Total</th>
                 <th>Fecha Máx. Pago</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -73,6 +74,7 @@ const ActividadesPage = {
                   <td>${actividad.nombre}</td>
                   <td>${this.formatDate(actividad.fecha)}</td>
                   <td>${this.formatMoney(actividad.cuotaIndividual)}</td>
+                  <td>${this.formatMoney(actividad.totalActividad || 0)}</td>
                   <td>${this.formatDate(actividad.fechaMaximaPago)}</td>
                   <td>
                     <span class="badge ${actividad.activa ? 'badge-success' : 'badge-danger'}">
@@ -159,6 +161,19 @@ const ActividadesPage = {
             >
           </div>
           <div class="form-group">
+            <label class="form-label" for="totalActividad">Total de la Actividad ($)</label>
+            <input 
+              type="number" 
+              id="totalActividad" 
+              class="form-input" 
+              min="0"
+              step="0.01"
+              value="${actividad?.totalActividad || ''}"
+              required
+            >
+            <small class="text-light">Monto total necesario para completar la actividad</small>
+          </div>
+          <div class="form-group">
             <label class="form-label" for="fechaMaximaPago">Fecha Máxima de Pago</label>
             <input 
               type="date" 
@@ -205,6 +220,7 @@ const ActividadesPage = {
         nombre: form.nombre.value.trim(),
         fecha: form.fecha.value,
         cuotaIndividual: parseFloat(form.cuotaIndividual.value),
+        totalActividad: parseFloat(form.totalActividad.value),
         fechaMaximaPago: form.fechaMaximaPago.value,
         descripcion: form.descripcion.value.trim(),
         activa: form.activa.checked
