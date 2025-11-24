@@ -1,0 +1,17 @@
+{
+  "name": "tesoreria-frontend",
+  "version": "1.0.0",
+  "description": "Frontend para sistema de tesorería 8vo C",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["tesoreria", "vite", "responsive"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.8"
+  }
+}
