@@ -61,17 +61,8 @@ const DashboardPage = {
       </div>
 
       <div class="card">
-        <h2 class="card-title mb-2">Resumen</h2>
-        <p>Bienvenida al sistema de tesorería del 8vo C. Utiliza el menú superior para navegar entre las diferentes secciones.</p>
-        <div class="mt-3">
-          <h3 class="mb-2">Acciones rápidas:</h3>
-          <div class="btn-group">
-            <a href="/alumnos" class="btn btn-primary" data-link>Gestionar Alumnos</a>
-            <a href="/actividades" class="btn btn-primary" data-link>Gestionar Actividades</a>
-            <a href="/pagos" class="btn btn-success" data-link>Registrar Pagos</a>
-            <a href="/reportes" class="btn btn-secondary" data-link>Ver Reportes</a>
-          </div>
-        </div>
+        <h2 class="card-title mb-2">© Matías Mosquera</h2>
+        <p>Para el amor de mi vida.</p>
       </div>
     `;
 
