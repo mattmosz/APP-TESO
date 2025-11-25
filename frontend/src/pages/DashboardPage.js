@@ -30,11 +30,6 @@ const DashboardPage = {
 
   renderStats(container, stats) {
     container.innerHTML = `
-      <div class="dashboard-header">
-        <img src="/assets/logo.png" alt="Logo Unidad Educativa" class="dashboard-logo">
-        <h1>Dashboard - Tesorería 8vo C</h1>
-      </div>
-      
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Monto Disponible</div>
