@@ -520,3 +520,72 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* ===== ACCORDION ===== */
+.accordion-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.accordion-item {
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.accordion-header {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.accordion-header:hover {
+  background-color: var(--bg-light);
+}
+
+.accordion-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.accordion-arrow {
+  font-size: 0.875rem;
+  transition: transform 0.3s;
+  color: var(--primary-color);
+}
+
+.accordion-item.active .accordion-arrow {
+  transform: rotate(90deg);
+}
+
+.accordion-summary {
+  color: var(--text-light);
+  font-size: 0.875rem;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.accordion-item.active .accordion-content {
+  max-height: 2000px;
+  transition: max-height 0.5s ease-in;
+}
+
+.accordion-content .table-container {
+  border-top: 1px solid var(--border-color);
+  border-radius: 0;
+  box-shadow: none;
+}

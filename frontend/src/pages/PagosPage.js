@@ -59,34 +59,76 @@ const PagosPage = {
         </div>
       `;
     } else {
+      // Agrupar pagos por actividad
+      const pagosPorActividad = {};
+      this.pagos.forEach(pago => {
+        const actividadId = pago.actividad?._id || 'sin-actividad';
+        const actividadNombre = pago.actividad?.nombre || 'Sin actividad';
+        
+        if (!pagosPorActividad[actividadId]) {
+          pagosPorActividad[actividadId] = {
+            nombre: actividadNombre,
+            pagos: [],
+            total: 0
+          };
+        }
+        pagosPorActividad[actividadId].pagos.push(pago);
+        pagosPorActividad[actividadId].total += pago.monto;
+      });
+
+      // Ordenar pagos dentro de cada actividad alfabéticamente
+      Object.values(pagosPorActividad).forEach(grupo => {
+        grupo.pagos.sort((a, b) => {
+          const nombreA = a.alumno?.nombreCompleto || '';
+          const nombreB = b.alumno?.nombreCompleto || '';
+          return nombreA.localeCompare(nombreB);
+        });
+      });
+
       card.innerHTML = `
         ${headerHTML}
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Alumno</th>
-                <th>Actividad</th>
-                <th>Monto</th>
-                <th>Fecha de Pago</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${this.pagos.map(pago => `
-                <tr>
-                  <td>${pago.alumno?.nombreCompleto || 'N/A'}</td>
-                  <td>${pago.actividad?.nombre || 'N/A'}</td>
-                  <td>${this.formatMoney(pago.monto)}</td>
-                  <td>${this.formatDate(pago.fechaPago)}</td>
-                  <td class="table-actions">
-                    <button class="btn btn-secondary btn-edit" data-id="${pago._id}">Editar</button>
-                    <button class="btn btn-danger btn-delete" data-id="${pago._id}">Eliminar</button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+        <div class="accordion-container">
+          ${Object.entries(pagosPorActividad).map(([actividadId, grupo]) => `
+            <div class="accordion-item" data-actividad="${actividadId}">
+              <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
+                <div class="accordion-title">
+                  <span class="accordion-arrow">▶</span>
+                  <strong>${grupo.nombre}</strong>
+                  <span class="badge badge-success">${grupo.pagos.length} pago(s)</span>
+                </div>
+                <div class="accordion-summary">
+                  <strong>Total recaudado:</strong> ${this.formatMoney(grupo.total)}
+                </div>
+              </div>
+              <div class="accordion-content">
+                <div class="table-container">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Alumno</th>
+                        <th>Monto</th>
+                        <th>Fecha de Pago</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${grupo.pagos.map(pago => `
+                        <tr>
+                          <td>${pago.alumno?.nombreCompleto || 'N/A'}</td>
+                          <td>${this.formatMoney(pago.monto)}</td>
+                          <td>${this.formatDate(pago.fechaPago)}</td>
+                          <td class="table-actions">
+                            <button class="btn btn-secondary btn-edit" data-id="${pago._id}">Editar</button>
+                            <button class="btn btn-danger btn-delete" data-id="${pago._id}">Eliminar</button>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          `).join('')}
         </div>
       `;
     }
