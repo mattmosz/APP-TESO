@@ -6,7 +6,7 @@
 // Aquí puedes personalizar cada tipo de alerta
 const ALERT_CONFIG = {
   success: {
-    gifUrl: 'https://tenor.com/es/view/dancing-don-bosco-gif-18112728',
+    gifUrl: '/assets/dancing-don-bosco.gif',
     title: '¡Pago registrado!',
     duration: 4000 // milisegundos
   },
