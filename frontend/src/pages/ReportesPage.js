@@ -58,51 +58,56 @@ const ReportesPage = {
           <strong>Monto Total en Deudas:</strong> ${this.formatMoney(montoTotalDeudas)}
         </div>
 
-        ${this.deudores.map(reporte => `
-          <div class="card mb-3">
-            <h3 class="mb-2">
-              ${reporte.actividad.nombre}
-              <span class="badge badge-warning">${reporte.cantidadDeudores} deudor(es)</span>
-            </h3>
-            <p class="text-light mb-2">
-              <strong>Cuota individual:</strong> ${this.formatMoney(reporte.actividad.cuotaIndividual)} |
-              <strong>Total actividad:</strong> ${this.formatMoney(reporte.actividad.totalActividad)} |
-              <strong>Fecha límite:</strong> ${this.formatDate(reporte.actividad.fechaMaximaPago)}
-            </p>
-            <div class="alert alert-info mb-2">
-              <strong>Progreso de la actividad:</strong><br>
-              Recaudado: ${this.formatMoney(reporte.actividad.totalRecaudado)} de ${this.formatMoney(reporte.actividad.totalActividad)}
-              (${reporte.actividad.porcentajeCompletado}%) |
-              <strong>Falta:</strong> ${this.formatMoney(reporte.actividad.faltante)}
+        <div class="accordion-container">
+          ${this.deudores.map(reporte => `
+            <div class="accordion-item" data-actividad="${reporte.actividad.id}">
+              <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
+                <div class="accordion-title">
+                  <span class="accordion-arrow">▶</span>
+                  <strong>${reporte.actividad.nombre}</strong>
+                  <span class="badge badge-warning">${reporte.cantidadDeudores} deudor(es)</span>
+                </div>
+                <div class="accordion-summary">
+                  <strong>Recaudado:</strong> ${this.formatMoney(reporte.actividad.totalRecaudado)} de ${this.formatMoney(reporte.actividad.totalActividad)} 
+                  (${reporte.actividad.porcentajeCompletado}%) | 
+                  <strong>Falta:</strong> ${this.formatMoney(reporte.actividad.faltante)}
+                </div>
+              </div>
+              <div class="accordion-content">
+                <p class="text-light mb-2" style="padding: 1rem 1.5rem; background: var(--bg-light);">
+                  <strong>Cuota individual:</strong> ${this.formatMoney(reporte.actividad.cuotaIndividual)} |
+                  <strong>Fecha límite:</strong> ${this.formatDate(reporte.actividad.fechaMaximaPago)}
+                </p>
+                <div class="table-container">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Alumno</th>
+                        <th>Pagado</th>
+                        <th>Pendiente</th>
+                        <th>Progreso</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${reporte.deudores.map(alumno => `
+                        <tr>
+                          <td>${alumno.nombreCompleto}</td>
+                          <td>${this.formatMoney(alumno.totalPagado)}</td>
+                          <td>${this.formatMoney(alumno.montoPendiente)}</td>
+                          <td>
+                            <span class="badge ${alumno.porcentajePagado > 0 ? 'badge-warning' : 'badge-danger'}">
+                              ${alumno.porcentajePagado}%
+                            </span>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div class="table-container">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Alumno</th>
-                    <th>Pagado</th>
-                    <th>Pendiente</th>
-                    <th>Progreso</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${reporte.deudores.map(alumno => `
-                    <tr>
-                      <td>${alumno.nombreCompleto}</td>
-                      <td>${this.formatMoney(alumno.totalPagado)}</td>
-                      <td>${this.formatMoney(alumno.montoPendiente)}</td>
-                      <td>
-                        <span class="badge ${alumno.porcentajePagado > 0 ? 'badge-warning' : 'badge-danger'}">
-                          ${alumno.porcentajePagado}%
-                        </span>
-                      </td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `).join('')}
+          `).join('')}
+        </div>
       `}
     `;
   },
