@@ -108,6 +108,7 @@ const PagosPage = {
                         <th>Alumno</th>
                         <th>Monto</th>
                         <th>Fecha de Pago</th>
+                        <th>Comp.</th>
                         <th>Acciones</th>
                       </tr>
                     </thead>
@@ -117,6 +118,12 @@ const PagosPage = {
                           <td>${pago.alumno?.nombreCompleto || 'N/A'}</td>
                           <td>${this.formatMoney(pago.monto)}</td>
                           <td>${this.formatDate(pago.fechaPago)}</td>
+                          <td>
+                            ${pago.comprobante ? 
+                              `<button class="btn btn-secondary btn-view-comp" data-id="${pago._id}" title="Ver comprobante">📄</button>` 
+                              : '-'
+                            }
+                          </td>
                           <td class="table-actions">
                             <button class="btn btn-secondary btn-edit" data-id="${pago._id}">Editar</button>
                             <button class="btn btn-danger btn-delete" data-id="${pago._id}">Eliminar</button>
@@ -139,6 +146,16 @@ const PagosPage = {
         const id = e.target.dataset.id;
         const pago = this.pagos.find(p => p._id === id);
         this.showPagoModal(pago);
+      });
+    });
+
+    container.querySelectorAll('.btn-view-comp').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.dataset.id;
+        const pago = this.pagos.find(p => p._id === id);
+        if (pago?.comprobante) {
+          this.viewComprobante(pago.comprobante);
+        }
       });
     });
 
@@ -250,6 +267,23 @@ const PagosPage = {
                 placeholder="Ej: Pago grupal recibido por..."
               ></textarea>
             </div>
+
+            <div class="form-group">
+              <label class="form-label" for="comprobante">Comprobante de Pago (opcional)</label>
+              <input 
+                type="file" 
+                id="comprobante" 
+                class="form-input"
+                accept="image/*,application/pdf"
+              >
+              <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+                Formatos: JPG, PNG, PDF (máx. 5MB)
+              </small>
+              <div id="preview-container" class="mt-2" style="display: none;">
+                <img id="preview-image" style="max-width: 200px; max-height: 200px; border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <p id="preview-filename" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-light);"></p>
+              </div>
+            </div>
           </div>
 
           <div class="btn-group">
@@ -271,6 +305,51 @@ const PagosPage = {
     const montoInput = form.querySelector('#monto');
     const selectedCount = form.querySelector('#selected-count');
     const submitBtn = form.querySelector('#submit-btn');
+    const comprobanteInput = form.querySelector('#comprobante');
+    const previewContainer = form.querySelector('#preview-container');
+    const previewImage = form.querySelector('#preview-image');
+    const previewFilename = form.querySelector('#preview-filename');
+    
+    let comprobanteData = null;
+
+    // Manejar preview del comprobante
+    comprobanteInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        previewContainer.style.display = 'none';
+        comprobanteData = null;
+        return;
+      }
+
+      // Validar tamaño (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('El archivo es muy grande. Máximo 5MB.');
+        comprobanteInput.value = '';
+        return;
+      }
+
+      // Convertir a Base64
+      const reader = new FileReader();
+      reader.onload = () => {
+        comprobanteData = {
+          filename: file.name,
+          mimetype: file.type,
+          data: reader.result.split(',')[1] // Quitar prefijo data:image/...;base64,
+        };
+
+        // Mostrar preview
+        previewContainer.style.display = 'block';
+        previewFilename.textContent = file.name;
+        
+        if (file.type.startsWith('image/')) {
+          previewImage.src = reader.result;
+          previewImage.style.display = 'block';
+        } else {
+          previewImage.style.display = 'none';
+        }
+      };
+      reader.readAsDataURL(file);
+    });
 
     // Cuando se selecciona una actividad, mostrar alumnos
     actividadSelect.addEventListener('change', async (e) => {
@@ -375,6 +454,11 @@ const PagosPage = {
         observaciones: form.observaciones.value.trim()
       };
 
+      // Agregar comprobante si existe
+      if (comprobanteData) {
+        data.comprobante = comprobanteData;
+      }
+
       submitBtn.disabled = true;
       submitBtn.textContent = 'Registrando...';
 
@@ -455,6 +539,43 @@ const PagosPage = {
               class="form-textarea"
             >${pago.observaciones || ''}</textarea>
           </div>
+          
+          ${pago.comprobante ? `
+            <div class="form-group">
+              <label class="form-label">Comprobante Actual</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" class="btn btn-secondary" id="view-comprobante-btn">
+                  📄 Ver Comprobante
+                </button>
+                <button type="button" class="btn btn-danger" id="remove-comprobante-btn">
+                  🗑️ Eliminar
+                </button>
+              </div>
+              <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+                ${pago.comprobante.filename}
+              </small>
+            </div>
+          ` : ''}
+          
+          <div class="form-group">
+            <label class="form-label" for="edit-comprobante">
+              ${pago.comprobante ? 'Cambiar Comprobante' : 'Agregar Comprobante'} (opcional)
+            </label>
+            <input 
+              type="file" 
+              id="edit-comprobante" 
+              class="form-input"
+              accept="image/*,application/pdf"
+            >
+            <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+              Formatos: JPG, PNG, PDF (máx. 5MB)
+            </small>
+            <div id="edit-preview-container" class="mt-2" style="display: none;">
+              <img id="edit-preview-image" style="max-width: 200px; max-height: 200px; border-radius: var(--radius); border: 1px solid var(--border-color);">
+              <p id="edit-preview-filename" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-light);"></p>
+            </div>
+          </div>
+          
           <div class="btn-group">
             <button type="submit" class="btn btn-success">Actualizar</button>
             <button type="button" class="btn btn-secondary" id="edit-cancel-btn">Cancelar</button>
@@ -466,6 +587,64 @@ const PagosPage = {
     openModal(modal);
 
     const form = modal.querySelector('#edit-pago-form');
+    let removeComprobante = false;
+    let newComprobanteData = null;
+
+    // Ver comprobante existente
+    if (pago.comprobante) {
+      modal.querySelector('#view-comprobante-btn')?.addEventListener('click', () => {
+        this.viewComprobante(pago.comprobante);
+      });
+
+      modal.querySelector('#remove-comprobante-btn')?.addEventListener('click', () => {
+        if (confirm('¿Eliminar el comprobante actual?')) {
+          removeComprobante = true;
+          modal.querySelector('#view-comprobante-btn').parentElement.parentElement.style.display = 'none';
+        }
+      });
+    }
+
+    // Manejar nuevo comprobante
+    const comprobanteInput = form.querySelector('#edit-comprobante');
+    const previewContainer = form.querySelector('#edit-preview-container');
+    const previewImage = form.querySelector('#edit-preview-image');
+    const previewFilename = form.querySelector('#edit-preview-filename');
+
+    comprobanteInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        previewContainer.style.display = 'none';
+        newComprobanteData = null;
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert('El archivo es muy grande. Máximo 5MB.');
+        comprobanteInput.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        newComprobanteData = {
+          filename: file.name,
+          mimetype: file.type,
+          data: reader.result.split(',')[1]
+        };
+
+        previewContainer.style.display = 'block';
+        previewFilename.textContent = file.name;
+        
+        if (file.type.startsWith('image/')) {
+          previewImage.src = reader.result;
+          previewImage.style.display = 'block';
+        } else {
+          previewImage.style.display = 'none';
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -474,6 +653,13 @@ const PagosPage = {
         fechaPago: form.querySelector('#edit-fechaPago').value,
         observaciones: form.querySelector('#edit-observaciones').value.trim()
       };
+
+      // Manejar comprobante
+      if (removeComprobante) {
+        data.comprobante = null;
+      } else if (newComprobanteData) {
+        data.comprobante = newComprobanteData;
+      }
 
       try {
         await apiService.updatePago(pago._id, data);
@@ -486,6 +672,37 @@ const PagosPage = {
     });
 
     modal.querySelector('#edit-cancel-btn').addEventListener('click', () => {
+      closeModal(modal);
+    });
+  },
+
+  viewComprobante(comprobante) {
+    const dataUrl = `data:${comprobante.mimetype};base64,${comprobante.data}`;
+    
+    const modal = createModal(
+      'Ver Comprobante',
+      `
+        <div style="text-align: center;">
+          <p style="margin-bottom: 1rem; color: var(--text-light);">
+            <strong>Archivo:</strong> ${comprobante.filename}
+          </p>
+          ${comprobante.mimetype.startsWith('image/') ? 
+            `<img src="${dataUrl}" style="max-width: 100%; max-height: 70vh; border-radius: var(--radius);">` :
+            `<embed src="${dataUrl}" type="${comprobante.mimetype}" style="width: 100%; height: 70vh;" />`
+          }
+          <div class="btn-group" style="margin-top: 1.5rem;">
+            <a href="${dataUrl}" download="${comprobante.filename}" class="btn btn-success">
+              💾 Descargar
+            </a>
+            <button type="button" class="btn btn-secondary" id="close-viewer-btn">Cerrar</button>
+          </div>
+        </div>
+      `
+    );
+
+    openModal(modal);
+
+    modal.querySelector('#close-viewer-btn').addEventListener('click', () => {
       closeModal(modal);
     });
   },

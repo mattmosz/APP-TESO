@@ -23,6 +23,11 @@ const pagoSchema = new mongoose.Schema({
   observaciones: {
     type: String,
     default: ''
+  },
+  comprobante: {
+    filename: String,
+    mimetype: String,
+    data: String // Base64
   }
 }, {
   timestamps: true

@@ -24,6 +24,11 @@ const egresoSchema = new mongoose.Schema({
   descripcion: {
     type: String,
     default: ''
+  },
+  factura: {
+    filename: String,
+    mimetype: String,
+    data: String // Base64
   }
 }, {
   timestamps: true

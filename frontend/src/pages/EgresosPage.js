@@ -72,6 +72,7 @@ const EgresosPage = {
                 <th>Monto</th>
                 <th>Fecha</th>
                 <th>Actividad</th>
+                <th>Fact.</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -82,6 +83,12 @@ const EgresosPage = {
                   <td>${this.formatMoney(egreso.monto)}</td>
                   <td>${this.formatDate(egreso.fecha)}</td>
                   <td>${egreso.actividad?.nombre || '-'}</td>
+                  <td>
+                    ${egreso.factura ? 
+                      `<button class="btn btn-secondary btn-view-fact" data-id="${egreso._id}" title="Ver factura">📄</button>` 
+                      : '-'
+                    }
+                  </td>
                   <td class="table-actions">
                     <button class="btn btn-secondary btn-edit" data-id="${egreso._id}">Editar</button>
                     <button class="btn btn-danger btn-delete" data-id="${egreso._id}">Eliminar</button>
@@ -100,6 +107,16 @@ const EgresosPage = {
         const id = e.target.dataset.id;
         const egreso = this.egresos.find(e => e._id === id);
         this.showEgresoModal(egreso);
+      });
+    });
+
+    container.querySelectorAll('.btn-view-fact').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.dataset.id;
+        const egreso = this.egresos.find(e => e._id === id);
+        if (egreso?.factura) {
+          this.viewFactura(egreso.factura);
+        }
       });
     });
 
@@ -179,6 +196,43 @@ const EgresosPage = {
               class="form-textarea"
             >${egreso?.descripcion || ''}</textarea>
           </div>
+          
+          ${egreso?.factura ? `
+            <div class="form-group">
+              <label class="form-label">Factura Actual</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" class="btn btn-secondary" id="view-factura-btn">
+                  📄 Ver Factura
+                </button>
+                <button type="button" class="btn btn-danger" id="remove-factura-btn">
+                  🗑️ Eliminar
+                </button>
+              </div>
+              <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+                ${egreso.factura.filename}
+              </small>
+            </div>
+          ` : ''}
+          
+          <div class="form-group">
+            <label class="form-label" for="factura">
+              ${egreso?.factura ? 'Cambiar Factura' : 'Agregar Factura'} (opcional)
+            </label>
+            <input 
+              type="file" 
+              id="factura" 
+              class="form-input"
+              accept="image/*,application/pdf"
+            >
+            <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+              Formatos: JPG, PNG, PDF (máx. 5MB)
+            </small>
+            <div id="preview-container" class="mt-2" style="display: none;">
+              <img id="preview-image" style="max-width: 200px; max-height: 200px; border-radius: var(--radius); border: 1px solid var(--border-color);">
+              <p id="preview-filename" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-light);"></p>
+            </div>
+          </div>
+          
           <div class="btn-group">
             <button type="submit" class="btn btn-danger">
               ${isEdit ? 'Actualizar' : 'Registrar'}
@@ -192,6 +246,64 @@ const EgresosPage = {
     openModal(modal);
 
     const form = modal.querySelector('#egreso-form');
+    let removeFactura = false;
+    let newFacturaData = null;
+
+    // Ver factura existente
+    if (egreso?.factura) {
+      modal.querySelector('#view-factura-btn')?.addEventListener('click', () => {
+        this.viewFactura(egreso.factura);
+      });
+
+      modal.querySelector('#remove-factura-btn')?.addEventListener('click', () => {
+        if (confirm('¿Eliminar la factura actual?')) {
+          removeFactura = true;
+          modal.querySelector('#view-factura-btn').parentElement.parentElement.style.display = 'none';
+        }
+      });
+    }
+
+    // Manejar nueva factura
+    const facturaInput = form.querySelector('#factura');
+    const previewContainer = form.querySelector('#preview-container');
+    const previewImage = form.querySelector('#preview-image');
+    const previewFilename = form.querySelector('#preview-filename');
+
+    facturaInput?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        previewContainer.style.display = 'none';
+        newFacturaData = null;
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert('El archivo es muy grande. Máximo 5MB.');
+        facturaInput.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        newFacturaData = {
+          filename: file.name,
+          mimetype: file.type,
+          data: reader.result.split(',')[1]
+        };
+
+        previewContainer.style.display = 'block';
+        previewFilename.textContent = file.name;
+        
+        if (file.type.startsWith('image/')) {
+          previewImage.src = reader.result;
+          previewImage.style.display = 'block';
+        } else {
+          previewImage.style.display = 'none';
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -202,6 +314,13 @@ const EgresosPage = {
         actividad: form.actividad.value || null,
         descripcion: form.descripcion.value.trim()
       };
+
+      // Manejar factura
+      if (removeFactura) {
+        data.factura = null;
+      } else if (newFacturaData) {
+        data.factura = newFacturaData;
+      }
 
       try {
         if (isEdit) {
@@ -219,6 +338,37 @@ const EgresosPage = {
     });
 
     modal.querySelector('#cancel-btn').addEventListener('click', () => {
+      closeModal(modal);
+    });
+  },
+
+  viewFactura(factura) {
+    const dataUrl = `data:${factura.mimetype};base64,${factura.data}`;
+    
+    const modal = createModal(
+      'Ver Factura',
+      `
+        <div style="text-align: center;">
+          <p style="margin-bottom: 1rem; color: var(--text-light);">
+            <strong>Archivo:</strong> ${factura.filename}
+          </p>
+          ${factura.mimetype.startsWith('image/') ? 
+            `<img src="${dataUrl}" style="max-width: 100%; max-height: 70vh; border-radius: var(--radius);">` :
+            `<embed src="${dataUrl}" type="${factura.mimetype}" style="width: 100%; height: 70vh;" />`
+          }
+          <div class="btn-group" style="margin-top: 1.5rem;">
+            <a href="${dataUrl}" download="${factura.filename}" class="btn btn-danger">
+              💾 Descargar
+            </a>
+            <button type="button" class="btn btn-secondary" id="close-viewer-btn">Cerrar</button>
+          </div>
+        </div>
+      `
+    );
+
+    openModal(modal);
+
+    modal.querySelector('#close-viewer-btn').addEventListener('click', () => {
       closeModal(modal);
     });
   },

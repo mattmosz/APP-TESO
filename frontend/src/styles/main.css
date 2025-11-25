@@ -119,6 +119,29 @@ body {
   padding: 2rem 0;
 }
 
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--bg-white);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.dashboard-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.75rem;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -468,6 +491,20 @@ body {
   .navbar-menu {
     width: 100%;
     justify-content: center;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .dashboard-logo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.25rem;
   }
 
   .stats-grid {
