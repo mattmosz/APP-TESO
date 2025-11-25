@@ -164,78 +164,97 @@ const PagosPage = {
 
   showPagoModal(pago = null) {
     const isEdit = !!pago;
+    
+    // Modo edición: formulario individual como antes
+    if (isEdit) {
+      this.showEditPagoModal(pago);
+      return;
+    }
+
+    // Modo creación: selector múltiple de alumnos
     const modal = createModal(
-      isEdit ? 'Editar Pago' : 'Registrar Nuevo Pago',
+      'Registrar Pagos',
       `
         <form id="pago-form">
-          <div class="form-group">
-            <label class="form-label" for="alumno">Alumno</label>
-            <select 
-              id="alumno" 
-              class="form-select" 
-              required
-              ${isEdit ? 'disabled' : ''}
-            >
-              <option value="">Seleccionar alumno...</option>
-              ${this.alumnos
-                .filter(a => a.activo)
-                .map(alumno => `
-                  <option value="${alumno._id}" ${pago?.alumno?._id === alumno._id ? 'selected' : ''}>
-                    ${alumno.nombreCompleto}
-                  </option>
-                `).join('')}
-            </select>
-          </div>
           <div class="form-group">
             <label class="form-label" for="actividad">Actividad</label>
             <select 
               id="actividad" 
               class="form-select" 
               required
-              ${isEdit ? 'disabled' : ''}
             >
               <option value="">Seleccionar actividad...</option>
               ${this.actividades
                 .filter(a => a.activa)
                 .map(actividad => `
-                  <option value="${actividad._id}" data-cuota="${actividad.cuotaIndividual}" ${pago?.actividad?._id === actividad._id ? 'selected' : ''}>
+                  <option value="${actividad._id}" data-cuota="${actividad.cuotaIndividual}">
                     ${actividad.nombre} - ${this.formatMoney(actividad.cuotaIndividual)}
                   </option>
                 `).join('')}
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="monto">Monto ($)</label>
-            <input 
-              type="number" 
-              id="monto" 
-              class="form-input" 
-              min="0"
-              step="0.01"
-              value="${pago?.monto || ''}"
-              required
-            >
+
+          <div id="alumnos-section" class="hidden">
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <label class="form-label">Seleccionar Alumnos</label>
+                <div>
+                  <button type="button" class="btn btn-secondary" id="select-all-btn" style="padding: 0.5rem 1rem;">
+                    Seleccionar Todos
+                  </button>
+                  <button type="button" class="btn btn-secondary" id="deselect-all-btn" style="padding: 0.5rem 1rem;">
+                    Deseleccionar Todos
+                  </button>
+                </div>
+              </div>
+              
+              <div id="alumnos-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1rem;">
+                <!-- Se llenará dinámicamente -->
+              </div>
+              
+              <div class="mt-2">
+                <span id="selected-count" style="color: var(--text-light); font-size: 0.875rem;">
+                  0 alumno(s) seleccionado(s)
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="monto">Monto por alumno ($)</label>
+              <input 
+                type="number" 
+                id="monto" 
+                class="form-input" 
+                min="0"
+                step="0.01"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="fechaPago">Fecha de Pago</label>
+              <input 
+                type="date" 
+                id="fechaPago" 
+                class="form-input" 
+                value="${new Date().toISOString().split('T')[0]}"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="observaciones">Observaciones (opcional)</label>
+              <textarea 
+                id="observaciones" 
+                class="form-textarea"
+                placeholder="Ej: Pago grupal recibido por..."
+              ></textarea>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="fechaPago">Fecha de Pago</label>
-            <input 
-              type="date" 
-              id="fechaPago" 
-              class="form-input" 
-              value="${pago ? pago.fechaPago.split('T')[0] : new Date().toISOString().split('T')[0]}"
-              required
-            >
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="observaciones">Observaciones (opcional)</label>
-            <textarea 
-              id="observaciones" 
-              class="form-textarea"
-            >${pago?.observaciones || ''}</textarea>
-          </div>
+
           <div class="btn-group">
-            <button type="submit" class="btn btn-success">
-              ${isEdit ? 'Actualizar' : 'Registrar'}
+            <button type="submit" class="btn btn-success" id="submit-btn">
+              Registrar Pagos
             </button>
             <button type="button" class="btn btn-secondary" id="cancel-btn">Cancelar</button>
           </div>
@@ -247,37 +266,217 @@ const PagosPage = {
 
     const form = modal.querySelector('#pago-form');
     const actividadSelect = form.querySelector('#actividad');
+    const alumnosSection = form.querySelector('#alumnos-section');
+    const alumnosList = form.querySelector('#alumnos-list');
     const montoInput = form.querySelector('#monto');
+    const selectedCount = form.querySelector('#selected-count');
+    const submitBtn = form.querySelector('#submit-btn');
 
-    // Auto-completar monto al seleccionar actividad
-    if (!isEdit) {
-      actividadSelect.addEventListener('change', (e) => {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        const cuota = selectedOption.dataset.cuota;
-        if (cuota) {
-          montoInput.value = cuota;
-        }
+    // Cuando se selecciona una actividad, mostrar alumnos
+    actividadSelect.addEventListener('change', async (e) => {
+      const actividadId = e.target.value;
+      
+      if (!actividadId) {
+        alumnosSection.classList.add('hidden');
+        return;
+      }
+
+      // Auto-completar monto
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      const cuota = selectedOption.dataset.cuota;
+      if (cuota) {
+        montoInput.value = cuota;
+      }
+
+      // Obtener pagos existentes de esta actividad
+      const pagosActividad = await apiService.getPagosByActividad(actividadId);
+      const alumnosConPago = new Map();
+      
+      pagosActividad.forEach(pago => {
+        const alumnoId = pago.alumno._id || pago.alumno;
+        const montoExistente = alumnosConPago.get(alumnoId) || 0;
+        alumnosConPago.set(alumnoId, montoExistente + pago.monto);
       });
-    }
+
+      // Mostrar lista de alumnos con checkboxes
+      alumnosList.innerHTML = this.alumnos
+        .filter(a => a.activo)
+        .map(alumno => {
+          const montoPagado = alumnosConPago.get(alumno._id) || 0;
+          const cuotaIndividual = parseFloat(cuota);
+          const saldoPendiente = cuotaIndividual - montoPagado;
+          const porcentaje = Math.round((montoPagado / cuotaIndividual) * 100);
+          
+          return `
+            <div class="alumno-checkbox" style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">
+              <label style="display: flex; align-items: center; cursor: pointer;">
+                <input 
+                  type="checkbox" 
+                  class="alumno-check" 
+                  data-alumno-id="${alumno._id}"
+                  style="margin-right: 0.75rem; width: 18px; height: 18px; cursor: pointer;"
+                >
+                <div style="flex: 1;">
+                  <strong>${alumno.nombreCompleto}</strong>
+                  ${montoPagado > 0 ? `
+                    <div style="font-size: 0.875rem; color: var(--text-light); margin-top: 0.25rem;">
+                      Pagado: ${this.formatMoney(montoPagado)} (${porcentaje}%) 
+                      ${saldoPendiente > 0 ? `| Pendiente: ${this.formatMoney(saldoPendiente)}` : '✓'}
+                    </div>
+                  ` : ''}
+                </div>
+              </label>
+            </div>
+          `;
+        }).join('');
+
+      alumnosSection.classList.remove('hidden');
+
+      // Actualizar contador cuando cambian los checkboxes
+      const updateCount = () => {
+        const checked = alumnosList.querySelectorAll('.alumno-check:checked').length;
+        selectedCount.textContent = `${checked} alumno(s) seleccionado(s)`;
+        submitBtn.textContent = checked > 0 ? `Registrar ${checked} Pago(s)` : 'Registrar Pagos';
+      };
+
+      alumnosList.querySelectorAll('.alumno-check').forEach(checkbox => {
+        checkbox.addEventListener('change', updateCount);
+      });
+
+      // Botón seleccionar todos
+      form.querySelector('#select-all-btn').addEventListener('click', () => {
+        alumnosList.querySelectorAll('.alumno-check').forEach(cb => cb.checked = true);
+        updateCount();
+      });
+
+      // Botón deseleccionar todos
+      form.querySelector('#deselect-all-btn').addEventListener('click', () => {
+        alumnosList.querySelectorAll('.alumno-check').forEach(cb => cb.checked = false);
+        updateCount();
+      });
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      const alumnosSeleccionados = Array.from(
+        alumnosList.querySelectorAll('.alumno-check:checked')
+      ).map(cb => cb.dataset.alumnoId);
+
+      if (alumnosSeleccionados.length === 0) {
+        alert('Debes seleccionar al menos un alumno');
+        return;
+      }
+
       const data = {
-        alumno: form.alumno.value,
-        actividad: form.actividad.value,
-        monto: parseFloat(form.monto.value),
+        actividad: actividadSelect.value,
+        monto: parseFloat(montoInput.value),
         fechaPago: form.fechaPago.value,
         observaciones: form.observaciones.value.trim()
       };
 
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Registrando...';
+
       try {
-        if (isEdit) {
-          await apiService.updatePago(pago._id, data);
-        } else {
-          await apiService.createPago(data);
-        }
+        // Registrar un pago por cada alumno seleccionado
+        const promises = alumnosSeleccionados.map(alumnoId => 
+          apiService.createPago({ ...data, alumno: alumnoId })
+        );
+
+        await Promise.all(promises);
         
+        this.pagos = await apiService.getPagos();
+        this.renderTable(document.querySelector('.container'));
+        closeModal(modal);
+        
+        alert(`✓ ${alumnosSeleccionados.length} pago(s) registrado(s) exitosamente`);
+      } catch (error) {
+        alert('Error: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = `Registrar ${alumnosSeleccionados.length} Pago(s)`;
+      }
+    });
+
+    modal.querySelector('#cancel-btn').addEventListener('click', () => {
+      closeModal(modal);
+    });
+  },
+
+  showEditPagoModal(pago) {
+    const modal = createModal(
+      'Editar Pago',
+      `
+        <form id="edit-pago-form">
+          <div class="form-group">
+            <label class="form-label">Alumno</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              value="${pago.alumno?.nombreCompleto || 'N/A'}"
+              disabled
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label">Actividad</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              value="${pago.actividad?.nombre || 'N/A'}"
+              disabled
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-monto">Monto ($)</label>
+            <input 
+              type="number" 
+              id="edit-monto" 
+              class="form-input" 
+              min="0"
+              step="0.01"
+              value="${pago.monto}"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-fechaPago">Fecha de Pago</label>
+            <input 
+              type="date" 
+              id="edit-fechaPago" 
+              class="form-input" 
+              value="${pago.fechaPago.split('T')[0]}"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-observaciones">Observaciones (opcional)</label>
+            <textarea 
+              id="edit-observaciones" 
+              class="form-textarea"
+            >${pago.observaciones || ''}</textarea>
+          </div>
+          <div class="btn-group">
+            <button type="submit" class="btn btn-success">Actualizar</button>
+            <button type="button" class="btn btn-secondary" id="edit-cancel-btn">Cancelar</button>
+          </div>
+        </form>
+      `
+    );
+
+    openModal(modal);
+
+    const form = modal.querySelector('#edit-pago-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const data = {
+        monto: parseFloat(form.querySelector('#edit-monto').value),
+        fechaPago: form.querySelector('#edit-fechaPago').value,
+        observaciones: form.querySelector('#edit-observaciones').value.trim()
+      };
+
+      try {
+        await apiService.updatePago(pago._id, data);
         this.pagos = await apiService.getPagos();
         this.renderTable(document.querySelector('.container'));
         closeModal(modal);
@@ -286,7 +485,7 @@ const PagosPage = {
       }
     });
 
-    modal.querySelector('#cancel-btn').addEventListener('click', () => {
+    modal.querySelector('#edit-cancel-btn').addEventListener('click', () => {
       closeModal(modal);
     });
   },

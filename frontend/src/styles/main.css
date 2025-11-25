@@ -589,3 +589,50 @@ body {
   border-radius: 0;
   box-shadow: none;
 }
+
+/* ===== CHECKBOX LIST ===== */
+.alumno-checkbox {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.alumno-checkbox:hover {
+  background-color: var(--bg-light);
+}
+
+.alumno-checkbox:last-child {
+  border-bottom: none;
+}
+
+.alumno-checkbox label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  margin: 0;
+}
+
+.alumno-checkbox input[type="checkbox"] {
+  margin-right: 0.75rem;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  accent-color: var(--primary-color);
+}
+
+.alumno-checkbox strong {
+  display: block;
+  color: var(--text-dark);
+}
+
+.alumno-info {
+  flex: 1;
+}
+
+.alumno-status {
+  font-size: 0.875rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}
