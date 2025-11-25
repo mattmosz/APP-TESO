@@ -1,6 +1,7 @@
 import { createNavbar } from '../components/Navbar.js';
 import { createModal, openModal, closeModal } from '../components/Modal.js';
 import { apiService } from '../services/apiService.js';
+import { showSuccessAlert, showErrorAlert } from '../components/Alert.js';
 
 const EgresosPage = {
   egresos: [],
@@ -129,7 +130,7 @@ const EgresosPage = {
             this.egresos = await apiService.getEgresos();
             this.renderTable(container);
           } catch (error) {
-            alert('Error al eliminar: ' + error.message);
+            showErrorAlert('Error al eliminar: ' + error.message);
           }
         }
       });
@@ -278,7 +279,7 @@ const EgresosPage = {
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert('El archivo es muy grande. Máximo 5MB.');
+        showErrorAlert('El archivo es muy grande. Máximo 5MB.');
         facturaInput.value = '';
         return;
       }
@@ -332,8 +333,9 @@ const EgresosPage = {
         this.egresos = await apiService.getEgresos();
         this.renderTable(document.querySelector('.container'));
         closeModal(modal);
+        showSuccessAlert(isEdit ? 'Egreso actualizado exitosamente' : 'Egreso registrado exitosamente');
       } catch (error) {
-        alert('Error: ' + error.message);
+        showErrorAlert(error.message);
       }
     });
 

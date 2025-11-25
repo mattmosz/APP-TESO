@@ -169,9 +169,10 @@ const ActividadesPage = {
               min="0"
               step="0.01"
               value="${actividad?.totalActividad || ''}"
-              required
+              readonly
+              style="background-color: var(--bg-light); cursor: not-allowed;"
             >
-            <small class="text-light">Monto total necesario para completar la actividad</small>
+            <small class="text-light" id="calc-info">Se calculará automáticamente (Cuota × Número de alumnos)</small>
           </div>
           <div class="form-group">
             <label class="form-label" for="fechaMaximaPago">Fecha Máxima de Pago</label>
@@ -213,6 +214,40 @@ const ActividadesPage = {
     openModal(modal);
 
     const form = modal.querySelector('#actividad-form');
+    const cuotaInput = form.querySelector('#cuotaIndividual');
+    const totalInput = form.querySelector('#totalActividad');
+    const calcInfo = form.querySelector('#calc-info');
+
+    // Función para calcular el total automáticamente
+    const calcularTotal = async () => {
+      const cuota = parseFloat(cuotaInput.value) || 0;
+      
+      if (cuota > 0) {
+        try {
+          // Obtener número de alumnos activos
+          const alumnos = await apiService.getAlumnos();
+          const numAlumnosActivos = alumnos.filter(a => a.activo).length;
+          
+          const total = cuota * numAlumnosActivos;
+          totalInput.value = total.toFixed(2);
+          calcInfo.textContent = `Calculado: $${cuota.toFixed(2)} × ${numAlumnosActivos} alumnos = $${total.toFixed(2)}`;
+        } catch (error) {
+          calcInfo.textContent = 'Error al calcular total';
+        }
+      } else {
+        totalInput.value = '';
+        calcInfo.textContent = 'Se calculará automáticamente (Cuota × Número de alumnos)';
+      }
+    };
+
+    // Calcular al cargar si hay valor inicial
+    if (cuotaInput.value) {
+      calcularTotal();
+    }
+
+    // Calcular cuando cambia la cuota
+    cuotaInput.addEventListener('input', calcularTotal);
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       

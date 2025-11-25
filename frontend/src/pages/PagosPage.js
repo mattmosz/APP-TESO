@@ -1,6 +1,7 @@
 import { createNavbar } from '../components/Navbar.js';
 import { createModal, openModal, closeModal } from '../components/Modal.js';
 import { apiService } from '../services/apiService.js';
+import { showSuccessAlert, showErrorAlert } from '../components/Alert.js';
 
 const PagosPage = {
   pagos: [],
@@ -168,7 +169,7 @@ const PagosPage = {
             this.pagos = await apiService.getPagos();
             this.renderTable(container);
           } catch (error) {
-            alert('Error al eliminar: ' + error.message);
+            showErrorAlert('Error al eliminar: ' + error.message);
           }
         }
       });
@@ -323,7 +324,7 @@ const PagosPage = {
 
       // Validar tamaño (5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('El archivo es muy grande. Máximo 5MB.');
+        showErrorAlert('El archivo es muy grande. Máximo 5MB.');
         comprobanteInput.value = '';
         return;
       }
@@ -443,7 +444,7 @@ const PagosPage = {
       ).map(cb => cb.dataset.alumnoId);
 
       if (alumnosSeleccionados.length === 0) {
-        alert('Debes seleccionar al menos un alumno');
+        showErrorAlert('Debes seleccionar al menos un alumno');
         return;
       }
 
@@ -474,9 +475,9 @@ const PagosPage = {
         this.renderTable(document.querySelector('.container'));
         closeModal(modal);
         
-        alert(`✓ ${alumnosSeleccionados.length} pago(s) registrado(s) exitosamente`);
+        showSuccessAlert(`${alumnosSeleccionados.length} pago(s) registrado(s) exitosamente`);
       } catch (error) {
-        alert('Error: ' + error.message);
+        showErrorAlert(error.message);
         submitBtn.disabled = false;
         submitBtn.textContent = `Registrar ${alumnosSeleccionados.length} Pago(s)`;
       }
@@ -619,7 +620,7 @@ const PagosPage = {
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert('El archivo es muy grande. Máximo 5MB.');
+        showErrorAlert('El archivo es muy grande. Máximo 5MB.');
         comprobanteInput.value = '';
         return;
       }
@@ -666,8 +667,9 @@ const PagosPage = {
         this.pagos = await apiService.getPagos();
         this.renderTable(document.querySelector('.container'));
         closeModal(modal);
+        showSuccessAlert('Pago actualizado exitosamente');
       } catch (error) {
-        alert('Error: ' + error.message);
+        showErrorAlert(error.message);
       }
     });
 
