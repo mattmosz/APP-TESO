@@ -1,7 +1,7 @@
 import { createNavbar } from '../components/Navbar.js';
 import { createModal, openModal, closeModal } from '../components/Modal.js';
 import { apiService } from '../services/apiService.js';
-import { showSuccessAlert, showErrorAlert } from '../components/Alert.js';
+import { showSuccessAlert, showErrorAlert, compressImage } from '../components/Alert.js';
 
 const PagosPage = {
   pagos: [],
@@ -322,34 +322,31 @@ const PagosPage = {
         return;
       }
 
-      // Validar tamaño (5MB)
+      // Validar tamaño (5MB archivo original)
       if (file.size > 5 * 1024 * 1024) {
         showErrorAlert('El archivo es muy grande. Máximo 5MB.');
         comprobanteInput.value = '';
         return;
       }
 
-      // Convertir a Base64
-      const reader = new FileReader();
-      reader.onload = () => {
-        comprobanteData = {
-          filename: file.name,
-          mimetype: file.type,
-          data: reader.result.split(',')[1] // Quitar prefijo data:image/...;base64,
-        };
+      try {
+        // Comprimir imagen antes de convertir
+        comprobanteData = await compressImage(file);
 
         // Mostrar preview
         previewContainer.style.display = 'block';
-        previewFilename.textContent = file.name;
+        previewFilename.textContent = `${file.name} (comprimida)`;
         
         if (file.type.startsWith('image/')) {
-          previewImage.src = reader.result;
+          previewImage.src = `data:${comprobanteData.mimetype};base64,${comprobanteData.data}`;
           previewImage.style.display = 'block';
         } else {
           previewImage.style.display = 'none';
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        showErrorAlert('Error al procesar el archivo');
+        comprobanteInput.value = '';
+      }
     });
 
     // Cuando se selecciona una actividad, mostrar alumnos
@@ -625,25 +622,23 @@ const PagosPage = {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        newComprobanteData = {
-          filename: file.name,
-          mimetype: file.type,
-          data: reader.result.split(',')[1]
-        };
+      try {
+        // Comprimir imagen
+        newComprobanteData = await compressImage(file);
 
         previewContainer.style.display = 'block';
-        previewFilename.textContent = file.name;
+        previewFilename.textContent = `${file.name} (comprimida)`;
         
         if (file.type.startsWith('image/')) {
-          previewImage.src = reader.result;
+          previewImage.src = `data:${newComprobanteData.mimetype};base64,${newComprobanteData.data}`;
           previewImage.style.display = 'block';
         } else {
           previewImage.style.display = 'none';
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        showErrorAlert('Error al procesar el archivo');
+        comprobanteInput.value = '';
+      }
     });
 
     form.addEventListener('submit', async (e) => {

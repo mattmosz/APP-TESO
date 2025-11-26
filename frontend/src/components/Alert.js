@@ -119,3 +119,67 @@ function showAlert(message, config, alertClass) {
   // Auto-cerrar según duración configurada
   setTimeout(closeAlert, config.duration);
 }
+
+// ============================================
+// UTILIDAD: Comprimir imágenes antes de subir
+// ============================================
+export function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    // Si es PDF, no comprimir
+    if (file.type === 'application/pdf') {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve({
+          filename: file.name,
+          mimetype: file.type,
+          data: reader.result.split(',')[1]
+        });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // Comprimir imágenes
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      img.onload = () => {
+        // Calcular nuevas dimensiones manteniendo proporción
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = width * ratio;
+          height = height * ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Dibujar imagen redimensionada
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convertir a Base64 con calidad reducida
+        const compressedDataUrl = canvas.toDataURL(file.type, quality);
+        
+        resolve({
+          filename: file.name,
+          mimetype: file.type,
+          data: compressedDataUrl.split(',')[1]
+        });
+      };
+      
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}

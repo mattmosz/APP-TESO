@@ -1,7 +1,7 @@
 import { createNavbar } from '../components/Navbar.js';
 import { createModal, openModal, closeModal } from '../components/Modal.js';
 import { apiService } from '../services/apiService.js';
-import { showSuccessAlert, showErrorAlert } from '../components/Alert.js';
+import { showSuccessAlert, showErrorAlert, compressImage } from '../components/Alert.js';
 
 const EgresosPage = {
   egresos: [],
@@ -284,25 +284,23 @@ const EgresosPage = {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        newFacturaData = {
-          filename: file.name,
-          mimetype: file.type,
-          data: reader.result.split(',')[1]
-        };
+      try {
+        // Comprimir imagen antes de enviar
+        newFacturaData = await compressImage(file);
 
         previewContainer.style.display = 'block';
-        previewFilename.textContent = file.name;
+        previewFilename.textContent = `${file.name} (comprimida)`;
         
         if (file.type.startsWith('image/')) {
-          previewImage.src = reader.result;
+          previewImage.src = `data:${newFacturaData.mimetype};base64,${newFacturaData.data}`;
           previewImage.style.display = 'block';
         } else {
           previewImage.style.display = 'none';
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        showErrorAlert('Error al procesar el archivo');
+        facturaInput.value = '';
+      }
     });
 
     form.addEventListener('submit', async (e) => {
