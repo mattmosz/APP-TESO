@@ -1,5 +1,6 @@
 import { authService } from '../services/authService.js';
 import { router } from '../router.js';
+import { keepAliveService } from '../services/keepAlive.js';
 
 const LoginPage = {
   render(container) {
@@ -49,6 +50,7 @@ const LoginPage = {
 
       try {
         await authService.login(username, password);
+        keepAliveService.start(); // Iniciar servicio para mantener backend despierto
         router.navigate('/dashboard');
       } catch (error) {
         errorMessage.textContent = error.message;

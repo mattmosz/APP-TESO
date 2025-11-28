@@ -1,5 +1,6 @@
 import { router } from '../router.js';
 import { authService } from '../services/authService.js';
+import { keepAliveService } from '../services/keepAlive.js';
 
 export function createNavbar() {
   const user = authService.getUser();
@@ -37,6 +38,7 @@ export function createNavbar() {
   });
 
   navbar.querySelector('#logout-btn').addEventListener('click', () => {
+    keepAliveService.stop(); // Detener servicio al cerrar sesión
     authService.logout();
     router.navigate('/login');
   });

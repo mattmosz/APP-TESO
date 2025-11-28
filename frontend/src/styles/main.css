@@ -631,18 +631,43 @@ body {
 .accordion-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-out;
+  transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+  opacity: 0;
 }
 
 .accordion-item.active .accordion-content {
-  max-height: 2000px;
-  transition: max-height 0.5s ease-in;
+  max-height: 5000px; /* Altura muy grande para acomodar cualquier contenido */
+  opacity: 1;
+  transition: max-height 0.6s ease-in, opacity 0.4s ease-in;
 }
 
 .accordion-content .table-container {
   border-top: 1px solid var(--border-color);
   border-radius: 0;
   box-shadow: none;
+  max-height: 70vh; /* 70% de la altura de la ventana */
+  overflow-y: auto; /* Scroll vertical dentro de la tabla */
+  overflow-x: auto; /* Scroll horizontal si es necesario */
+}
+
+/* Personalizar scrollbar para las tablas de acordeones */
+.accordion-content .table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.accordion-content .table-container::-webkit-scrollbar-track {
+  background: var(--bg-light);
+  border-radius: 4px;
+}
+
+.accordion-content .table-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.accordion-content .table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-light);
 }
 
 /* ===== CHECKBOX LIST ===== */

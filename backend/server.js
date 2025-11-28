@@ -16,9 +16,36 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configuración de CORS mejorada
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como mobile apps o curl)
+    if (!origin) return callback(null, true);
+    
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://app-teso.vercel.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // En producción, permitir todos temporalmente
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '50mb' })); // Aumentar límite para imágenes
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -36,6 +63,15 @@ app.use('/api/dashboard', dashboardRoutes);
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.json({ message: 'API Tesorería 8vo C funcionando' });
+});
+
+// Health check para mantener el servidor despierto
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 // Manejo de errores global

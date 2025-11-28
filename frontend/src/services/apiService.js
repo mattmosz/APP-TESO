@@ -17,13 +17,19 @@ class ApiService {
     try {
       const response = await fetch(`${config.API_URL}${endpoint}`, {
         ...options,
-        headers
+        headers,
+        mode: 'cors'
       });
 
       if (response.status === 401) {
         authService.logout();
         window.location.href = '/';
         throw new Error('Sesión expirada');
+      }
+
+      // Detectar si el backend está dormido (503)
+      if (response.status === 503) {
+        throw new Error('El servidor está despertando, por favor espera unos segundos e intenta de nuevo');
       }
 
       if (!response.ok) {
@@ -33,6 +39,10 @@ class ApiService {
 
       return await response.json();
     } catch (error) {
+      // Mejorar mensajes de error
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        throw new Error('No se puede conectar con el servidor. Verifica tu conexión a internet.');
+      }
       throw error;
     }
   }
