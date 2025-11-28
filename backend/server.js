@@ -10,6 +10,7 @@ import actividadRoutes from './routes/actividades.js';
 import pagoRoutes from './routes/pagos.js';
 import egresoRoutes from './routes/egresos.js';
 import dashboardRoutes from './routes/dashboard.js';
+import poaRoutes from './routes/poa.js';
 
 dotenv.config();
 
@@ -59,6 +60,7 @@ app.use('/api/actividades', actividadRoutes);
 app.use('/api/pagos', pagoRoutes);
 app.use('/api/egresos', egresoRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/poa', poaRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

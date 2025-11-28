@@ -179,6 +179,24 @@ class ApiService {
   getDeudoresByActividad(actividadId) {
     return this.request(`/dashboard/deudores/${actividadId}`);
   }
+
+  // POA
+  getPOA() {
+    return this.request('/poa');
+  }
+
+  uploadPOA(data) {
+    return this.request('/poa', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  deletePOA() {
+    return this.request('/poa', {
+      method: 'DELETE'
+    });
+  }
 }
 
 export const apiService = new ApiService();

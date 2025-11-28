@@ -5,6 +5,7 @@ import ActividadesPage from './pages/ActividadesPage.js';
 import PagosPage from './pages/PagosPage.js';
 import EgresosPage from './pages/EgresosPage.js';
 import ReportesPage from './pages/ReportesPage.js';
+import POAPage from './pages/POAPage.js';
 import { authService } from './services/authService.js';
 
 class Router {
@@ -16,7 +17,8 @@ class Router {
       '/actividades': ActividadesPage,
       '/pagos': PagosPage,
       '/egresos': EgresosPage,
-      '/reportes': ReportesPage
+      '/reportes': ReportesPage,
+      '/poa': POAPage
     };
 
     window.addEventListener('popstate', () => {

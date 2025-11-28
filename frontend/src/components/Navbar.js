@@ -21,6 +21,7 @@ export function createNavbar() {
         <a href="/pagos" class="navbar-link ${currentPath === '/pagos' ? 'active' : ''}" data-link>Pagos</a>
         <a href="/egresos" class="navbar-link ${currentPath === '/egresos' ? 'active' : ''}" data-link>Egresos</a>
         <a href="/reportes" class="navbar-link ${currentPath === '/reportes' ? 'active' : ''}" data-link>Reportes</a>
+        <a href="/poa" class="navbar-link ${currentPath === '/poa' ? 'active' : ''}" data-link>POA</a>
       </div>
       <div class="navbar-user">
         <span>${user?.nombre || 'Usuario'}</span>
