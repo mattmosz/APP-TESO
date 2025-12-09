@@ -192,17 +192,17 @@ const AlumnosPage = {
             </div>
             <div class="actividad-detalle-body">
               <div class="actividad-stats">
-                <div class="stat-item">
-                  <span class="stat-label">Cuota:</span>
-                  <span class="stat-value">$${detalle.actividad.cuotaIndividual.toFixed(2)}</span>
+                <div class="actividad-stat-item">
+                  <span class="actividad-stat-label">Cuota:</span>
+                  <span class="actividad-stat-value">$${detalle.actividad.cuotaIndividual.toFixed(2)}</span>
                 </div>
-                <div class="stat-item ${detalle.pagado > 0 ? 'stat-success' : ''}">
-                  <span class="stat-label">Pagado:</span>
-                  <span class="stat-value">$${detalle.pagado.toFixed(2)}</span>
+                <div class="actividad-stat-item ${detalle.pagado > 0 ? 'stat-success' : ''}">
+                  <span class="actividad-stat-label">Pagado:</span>
+                  <span class="actividad-stat-value">$${detalle.pagado.toFixed(2)}</span>
                 </div>
-                <div class="stat-item ${detalle.pendiente > 0 ? 'stat-warning' : 'stat-success'}">
-                  <span class="stat-label">Pendiente:</span>
-                  <span class="stat-value">$${detalle.pendiente.toFixed(2)}</span>
+                <div class="actividad-stat-item ${detalle.pendiente > 0 ? 'stat-warning' : 'stat-success'}">
+                  <span class="actividad-stat-label">Pendiente:</span>
+                  <span class="actividad-stat-value">$${detalle.pendiente.toFixed(2)}</span>
                 </div>
               </div>
               ${detalle.pagos.length > 0 ? `
