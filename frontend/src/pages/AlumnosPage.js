@@ -4,6 +4,8 @@ import { apiService } from '../services/apiService.js';
 
 const AlumnosPage = {
   alumnos: [],
+  actividades: [],
+  pagos: [],
 
   async render(container) {
     const navbar = createNavbar();
@@ -25,12 +27,17 @@ const AlumnosPage = {
     container.appendChild(content);
 
     try {
-      this.alumnos = await apiService.getAlumnos();
+      // Cargar datos en paralelo
+      [this.alumnos, this.actividades, this.pagos] = await Promise.all([
+        apiService.getAlumnos(),
+        apiService.getActividades(),
+        apiService.getPagos()
+      ]);
       this.renderTable(content);
     } catch (error) {
       content.querySelector('.card').innerHTML = `
         <div class="alert alert-error">
-          Error al cargar alumnos: ${error.message}
+          Error al cargar datos: ${error.message}
         </div>
       `;
     }
@@ -55,37 +62,13 @@ const AlumnosPage = {
     } else {
       card.innerHTML = `
         ${headerHTML}
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Nombre Completo</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${this.alumnos.map(alumno => `
-                <tr>
-                  <td>${alumno.nombreCompleto}</td>
-                  <td>
-                    <span class="badge ${alumno.activo ? 'badge-success' : 'badge-danger'}">
-                      ${alumno.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td class="table-actions">
-                    <button class="btn btn-secondary btn-edit" data-id="${alumno._id}">Editar</button>
-                    <button class="btn btn-danger btn-delete" data-id="${alumno._id}">Eliminar</button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+        <div class="alumnos-list">
+          ${this.alumnos.map(alumno => this.renderAlumnoCard(alumno)).join('')}
         </div>
       `;
     }
 
-    // Event listeners
+    // Event listeners para editar y eliminar
     container.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.target.dataset.id;
@@ -100,7 +83,10 @@ const AlumnosPage = {
         if (confirm('¿Estás segura de eliminar este alumno?')) {
           try {
             await apiService.deleteAlumno(id);
-            this.alumnos = await apiService.getAlumnos();
+            [this.alumnos, this.pagos] = await Promise.all([
+              apiService.getAlumnos(),
+              apiService.getPagos()
+            ]);
             this.renderTable(container);
           } catch (error) {
             alert('Error al eliminar: ' + error.message);
@@ -109,9 +95,133 @@ const AlumnosPage = {
       });
     });
 
+    // Event listeners para acordeones
+    container.querySelectorAll('.alumno-header').forEach(header => {
+      header.addEventListener('click', (e) => {
+        const card = e.currentTarget.closest('.alumno-card');
+        const content = card.querySelector('.alumno-content');
+        const icon = e.currentTarget.querySelector('.accordion-icon');
+        
+        content.classList.toggle('active');
+        icon.textContent = content.classList.contains('active') ? '▼' : '▶';
+      });
+    });
+
     container.querySelector('#add-alumno-btn')?.addEventListener('click', () => {
       this.showAlumnoModal();
     });
+  },
+
+  renderAlumnoCard(alumno) {
+    const estadoAlumno = this.getEstadoAlumno(alumno);
+    
+    return `
+      <div class="alumno-card">
+        <div class="alumno-header">
+          <div class="alumno-header-left">
+            <span class="accordion-icon">▶</span>
+            <h3>${alumno.nombreCompleto}</h3>
+            <span class="badge ${alumno.activo ? 'badge-success' : 'badge-danger'}">
+              ${alumno.activo ? 'Activo' : 'Inactivo'}
+            </span>
+          </div>
+          <div class="alumno-header-right">
+            <span class="alumno-resumen">
+              <strong>Pagado:</strong> $${estadoAlumno.totalPagado.toFixed(2)} | 
+              <strong>Pendiente:</strong> $${estadoAlumno.totalPendiente.toFixed(2)}
+            </span>
+            <button class="btn btn-secondary btn-edit" data-id="${alumno._id}" onclick="event.stopPropagation()">Editar</button>
+            <button class="btn btn-danger btn-delete" data-id="${alumno._id}" onclick="event.stopPropagation()">Eliminar</button>
+          </div>
+        </div>
+        <div class="alumno-content">
+          ${this.renderActividadesAlumno(alumno, estadoAlumno)}
+        </div>
+      </div>
+    `;
+  },
+
+  getEstadoAlumno(alumno) {
+    const actividadesActivas = this.actividades.filter(act => act.activa);
+    let totalPagado = 0;
+    let totalPendiente = 0;
+    const detalleActividades = [];
+
+    actividadesActivas.forEach(actividad => {
+      const pagosActividad = this.pagos.filter(p => 
+        p.alumno._id === alumno._id && p.actividad._id === actividad._id
+      );
+      
+      const pagado = pagosActividad.reduce((sum, p) => sum + p.monto, 0);
+      const pendiente = Math.max(0, actividad.cuotaIndividual - pagado);
+      
+      totalPagado += pagado;
+      totalPendiente += pendiente;
+      
+      detalleActividades.push({
+        actividad,
+        pagado,
+        pendiente,
+        pagos: pagosActividad
+      });
+    });
+
+    return {
+      totalPagado,
+      totalPendiente,
+      detalleActividades
+    };
+  },
+
+  renderActividadesAlumno(alumno, estadoAlumno) {
+    if (estadoAlumno.detalleActividades.length === 0) {
+      return `
+        <div class="empty-state-small">
+          <p>No hay actividades activas registradas</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="actividades-container">
+        ${estadoAlumno.detalleActividades.map(detalle => `
+          <div class="actividad-detalle">
+            <div class="actividad-detalle-header">
+              <h4>${detalle.actividad.nombre}</h4>
+              <span class="actividad-fecha">${new Date(detalle.actividad.fecha).toLocaleDateString('es-BO')}</span>
+            </div>
+            <div class="actividad-detalle-body">
+              <div class="actividad-stats">
+                <div class="stat-item">
+                  <span class="stat-label">Cuota:</span>
+                  <span class="stat-value">$${detalle.actividad.cuotaIndividual.toFixed(2)}</span>
+                </div>
+                <div class="stat-item ${detalle.pagado > 0 ? 'stat-success' : ''}">
+                  <span class="stat-label">Pagado:</span>
+                  <span class="stat-value">$${detalle.pagado.toFixed(2)}</span>
+                </div>
+                <div class="stat-item ${detalle.pendiente > 0 ? 'stat-warning' : 'stat-success'}">
+                  <span class="stat-label">Pendiente:</span>
+                  <span class="stat-value">$${detalle.pendiente.toFixed(2)}</span>
+                </div>
+              </div>
+              ${detalle.pagos.length > 0 ? `
+                <div class="pagos-lista">
+                  <h5>Pagos realizados:</h5>
+                  ${detalle.pagos.map(pago => `
+                    <div class="pago-item">
+                      <span class="pago-fecha">${new Date(pago.fechaPago).toLocaleDateString('es-BO')}</span>
+                      <span class="pago-monto">$${pago.monto.toFixed(2)}</span>
+                      ${pago.observaciones ? `<span class="pago-obs">${pago.observaciones}</span>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              ` : '<p class="no-pagos">Sin pagos registrados</p>'}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
   },
 
   showAlumnoModal(alumno = null) {
@@ -169,7 +279,10 @@ const AlumnosPage = {
           await apiService.createAlumno(data);
         }
         
-        this.alumnos = await apiService.getAlumnos();
+        [this.alumnos, this.pagos] = await Promise.all([
+          apiService.getAlumnos(),
+          apiService.getPagos()
+        ]);
         this.renderTable(document.querySelector('.container'));
         closeModal(modal);
       } catch (error) {
