@@ -60,8 +60,7 @@ const DashboardPage = {
       </div>
 
       <div class="card">
-        <h2 class="card-title mb-2">© Matías Mosquera</h2>
-        <p>Para el amor de mi vida.</p>
+        <h2 class="card-title mb-2">© Directiva Padres de Familia 8vo C</h2>
       </div>
     `;
 
