@@ -1,6 +1,6 @@
 import express from 'express';
 import Pago from '../models/Pago.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -47,7 +47,7 @@ router.get('/alumno/:alumnoId', async (req, res) => {
 });
 
 // Registrar un pago
-router.post('/', async (req, res) => {
+router.post('/', adminOnly, async (req, res) => {
   try {
     const pago = new Pago(req.body);
     await pago.save();
@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
 });
 
 // Actualizar un pago
-router.put('/:id', async (req, res) => {
+router.put('/:id', adminOnly, async (req, res) => {
   try {
     const pago = await Pago.findByIdAndUpdate(
       req.params.id,
@@ -80,7 +80,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Eliminar un pago
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminOnly, async (req, res) => {
   try {
     const pago = await Pago.findByIdAndDelete(req.params.id);
     if (!pago) {

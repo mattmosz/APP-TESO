@@ -50,6 +50,14 @@ class AuthService {
   isAuthenticated() {
     return !!this.token;
   }
+
+  isPadre() {
+    return this.user?.rol === 'padre';
+  }
+
+  isAdmin() {
+    return this.user?.rol === 'admin' || this.user?.rol === 'tesorera';
+  }
 }
 
 export const authService = new AuthService();

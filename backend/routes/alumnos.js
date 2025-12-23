@@ -1,6 +1,6 @@
 import express from 'express';
 import Alumno from '../models/Alumno.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -31,7 +31,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Crear nuevo alumno
-router.post('/', async (req, res) => {
+router.post('/', adminOnly, async (req, res) => {
   try {
     const alumno = new Alumno(req.body);
     await alumno.save();
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
 });
 
 // Actualizar alumno
-router.put('/:id', async (req, res) => {
+router.put('/:id', adminOnly, async (req, res) => {
   try {
     const alumno = await Alumno.findByIdAndUpdate(
       req.params.id,
@@ -59,7 +59,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Eliminar alumno
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminOnly, async (req, res) => {
   try {
     const alumno = await Alumno.findByIdAndDelete(req.params.id);
     if (!alumno) {

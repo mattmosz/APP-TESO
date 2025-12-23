@@ -1,6 +1,6 @@
 import express from 'express';
 import POA from '../models/POA.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
 });
 
 // Subir o reemplazar POA
-router.post('/', async (req, res) => {
+router.post('/', adminOnly, async (req, res) => {
   try {
     // Eliminar POA anterior si existe
     await POA.deleteMany({});
@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
 });
 
 // Eliminar POA
-router.delete('/', async (req, res) => {
+router.delete('/', adminOnly, async (req, res) => {
   try {
     await POA.deleteMany({});
     res.json({ message: 'POA eliminado exitosamente' });

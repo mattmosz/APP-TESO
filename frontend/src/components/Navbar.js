@@ -5,6 +5,7 @@ import { keepAliveService } from '../services/keepAlive.js';
 export function createNavbar() {
   const user = authService.getUser();
   const currentPath = window.location.pathname;
+  const isPadre = authService.isPadre();
 
   const navbar = document.createElement('nav');
   navbar.className = 'navbar';
@@ -16,15 +17,15 @@ export function createNavbar() {
       </div>
       <div class="navbar-menu">
         <a href="/dashboard" class="navbar-link ${currentPath === '/dashboard' ? 'active' : ''}" data-link>Dashboard</a>
-        <a href="/alumnos" class="navbar-link ${currentPath === '/alumnos' ? 'active' : ''}" data-link>Alumnos</a>
-        <a href="/actividades" class="navbar-link ${currentPath === '/actividades' ? 'active' : ''}" data-link>Actividades</a>
-        <a href="/pagos" class="navbar-link ${currentPath === '/pagos' ? 'active' : ''}" data-link>Pagos</a>
+        ${!isPadre ? `<a href="/alumnos" class="navbar-link ${currentPath === '/alumnos' ? 'active' : ''}" data-link>Alumnos</a>` : ''}
+        ${!isPadre ? `<a href="/actividades" class="navbar-link ${currentPath === '/actividades' ? 'active' : ''}" data-link>Actividades</a>` : ''}
+        ${!isPadre ? `<a href="/pagos" class="navbar-link ${currentPath === '/pagos' ? 'active' : ''}" data-link>Pagos</a>` : ''}
         <a href="/egresos" class="navbar-link ${currentPath === '/egresos' ? 'active' : ''}" data-link>Egresos</a>
         <a href="/reportes" class="navbar-link ${currentPath === '/reportes' ? 'active' : ''}" data-link>Reportes</a>
-        <a href="/poa" class="navbar-link ${currentPath === '/poa' ? 'active' : ''}" data-link>POA</a>
+        ${!isPadre ? `<a href="/poa" class="navbar-link ${currentPath === '/poa' ? 'active' : ''}" data-link>POA</a>` : ''}
       </div>
       <div class="navbar-user">
-        <span>${user?.nombre || 'Usuario'}</span>
+        <span>${user?.nombre || 'Usuario'}${isPadre ? ' (Lectura)' : ''}</span>
         <button class="btn btn-secondary" id="logout-btn">Cerrar sesión</button>
       </div>
     </div>

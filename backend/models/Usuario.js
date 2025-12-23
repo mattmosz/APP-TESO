@@ -19,7 +19,7 @@ const usuarioSchema = new mongoose.Schema({
   rol: {
     type: String,
     default: 'tesorera',
-    enum: ['tesorera']
+    enum: ['tesorera', 'admin', 'padre']
   }
 }, {
   timestamps: true

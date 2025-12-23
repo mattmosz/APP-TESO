@@ -47,6 +47,13 @@ class Router {
       return;
     }
 
+    // Restringir páginas para padres de familia
+    const restrictedForPadres = ['/alumnos', '/actividades', '/pagos', '/poa'];
+    if (authService.isPadre() && restrictedForPadres.includes(path)) {
+      this.navigate('/dashboard');
+      return;
+    }
+
     const app = document.getElementById('app');
     app.innerHTML = '';
     RouteComponent.render(app);

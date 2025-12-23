@@ -1,6 +1,6 @@
 import express from 'express';
 import Actividad from '../models/Actividad.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -31,7 +31,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Crear nueva actividad
-router.post('/', async (req, res) => {
+router.post('/', adminOnly, async (req, res) => {
   try {
     const actividad = new Actividad(req.body);
     await actividad.save();
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
 });
 
 // Actualizar actividad
-router.put('/:id', async (req, res) => {
+router.put('/:id', adminOnly, async (req, res) => {
   try {
     const actividad = await Actividad.findByIdAndUpdate(
       req.params.id,
@@ -59,7 +59,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Eliminar actividad
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminOnly, async (req, res) => {
   try {
     const actividad = await Actividad.findByIdAndDelete(req.params.id);
     if (!actividad) {

@@ -1,6 +1,6 @@
 import express from 'express';
 import Egreso from '../models/Egreso.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -34,7 +34,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Crear nuevo egreso
-router.post('/', async (req, res) => {
+router.post('/', adminOnly, async (req, res) => {
   try {
     const egreso = new Egreso(req.body);
     await egreso.save();
@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
 });
 
 // Actualizar egreso
-router.put('/:id', async (req, res) => {
+router.put('/:id', adminOnly, async (req, res) => {
   try {
     const egreso = await Egreso.findByIdAndUpdate(
       req.params.id,
@@ -64,7 +64,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Eliminar egreso
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminOnly, async (req, res) => {
   try {
     const egreso = await Egreso.findByIdAndDelete(req.params.id);
     if (!egreso) {
