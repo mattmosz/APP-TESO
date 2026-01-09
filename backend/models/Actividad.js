@@ -10,14 +10,18 @@ const actividadSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  requiereCuota: {
+    type: Boolean,
+    default: true
+  },
   cuotaIndividual: {
     type: Number,
-    required: true,
+    default: 0,
     min: 0
   },
   totalActividad: {
     type: Number,
-    required: true,
+    default: 0,
     min: 0
   },
   fechaMaximaPago: {

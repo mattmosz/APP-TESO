@@ -68,7 +68,8 @@ router.get('/deudores/:actividadId', async (req, res) => {
 // Obtener reporte general de deudores (todas las actividades)
 router.get('/deudores', async (req, res) => {
   try {
-    const actividades = await Actividad.find({ activa: true });
+    // Solo incluir actividades activas que requieren cuota
+    const actividades = await Actividad.find({ activa: true, requiereCuota: { $ne: false } });
     const alumnos = await Alumno.find({ activo: true });
     
     const reporte = [];

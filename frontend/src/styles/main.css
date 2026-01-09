@@ -432,6 +432,11 @@ body {
   color: #92400e;
 }
 
+.badge-secondary {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
 /* ===== ALERTS ===== */
 .alert {
   padding: 1rem;

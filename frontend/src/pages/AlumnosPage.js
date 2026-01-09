@@ -142,7 +142,8 @@ const AlumnosPage = {
   },
 
   getEstadoAlumno(alumno) {
-    const actividadesActivas = this.actividades.filter(act => act.activa);
+    // Solo incluir actividades activas que requieren cuota
+    const actividadesActivas = this.actividades.filter(act => act.activa && act.requiereCuota !== false);
     let totalPagado = 0;
     let totalPendiente = 0;
     const detalleActividades = [];

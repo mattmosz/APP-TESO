@@ -73,8 +73,8 @@ const ActividadesPage = {
                 <tr>
                   <td>${actividad.nombre}</td>
                   <td>${this.formatDate(actividad.fecha)}</td>
-                  <td>${this.formatMoney(actividad.cuotaIndividual)}</td>
-                  <td>${this.formatMoney(actividad.totalActividad || 0)}</td>
+                  <td>${actividad.requiereCuota === false ? '<span class="badge badge-secondary">No Aplica</span>' : this.formatMoney(actividad.cuotaIndividual)}</td>
+                  <td>${actividad.requiereCuota === false ? '<span class="badge badge-secondary">No Aplica</span>' : this.formatMoney(actividad.totalActividad || 0)}</td>
                   <td>${this.formatDate(actividad.fechaMaximaPago)}</td>
                   <td>
                     <span class="badge ${actividad.activa ? 'badge-success' : 'badge-danger'}">
@@ -124,6 +124,8 @@ const ActividadesPage = {
 
   showActividadModal(actividad = null) {
     const isEdit = !!actividad;
+    const requiereCuota = actividad?.requiereCuota !== false;
+    
     const modal = createModal(
       isEdit ? 'Editar Actividad' : 'Nueva Actividad',
       `
@@ -149,30 +151,41 @@ const ActividadesPage = {
             >
           </div>
           <div class="form-group">
-            <label class="form-label" for="cuotaIndividual">Cuota Individual ($)</label>
-            <input 
-              type="number" 
-              id="cuotaIndividual" 
-              class="form-input" 
-              min="0"
-              step="0.01"
-              value="${actividad?.cuotaIndividual || ''}"
-              required
-            >
+            <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input 
+                type="checkbox" 
+                id="requiereCuota"
+                ${requiereCuota ? 'checked' : ''}
+              >
+              Esta actividad requiere cuota individual de los alumnos
+            </label>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="totalActividad">Total de la Actividad ($)</label>
-            <input 
-              type="number" 
-              id="totalActividad" 
-              class="form-input" 
-              min="0"
-              step="0.01"
-              value="${actividad?.totalActividad || ''}"
-              readonly
-              style="background-color: var(--bg-light); cursor: not-allowed;"
-            >
-            <small class="text-light" id="calc-info">Se calculará automáticamente (Cuota × Número de alumnos)</small>
+          <div id="cuota-fields" style="${requiereCuota ? '' : 'display: none;'}">
+            <div class="form-group">
+              <label class="form-label" for="cuotaIndividual">Cuota Individual ($)</label>
+              <input 
+                type="number" 
+                id="cuotaIndividual" 
+                class="form-input" 
+                min="0"
+                step="0.01"
+                value="${actividad?.cuotaIndividual || ''}"
+              >
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="totalActividad">Total de la Actividad ($)</label>
+              <input 
+                type="number" 
+                id="totalActividad" 
+                class="form-input" 
+                min="0"
+                step="0.01"
+                value="${actividad?.totalActividad || ''}"
+                readonly
+                style="background-color: var(--bg-light); cursor: not-allowed;"
+              >
+              <small class="text-light" id="calc-info">Se calculará automáticamente (Cuota × Número de alumnos)</small>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label" for="fechaMaximaPago">Fecha Máxima de Pago</label>
@@ -214,9 +227,24 @@ const ActividadesPage = {
     openModal(modal);
 
     const form = modal.querySelector('#actividad-form');
+    const requiereCuotaCheckbox = form.querySelector('#requiereCuota');
+    const cuotaFields = form.querySelector('#cuota-fields');
     const cuotaInput = form.querySelector('#cuotaIndividual');
     const totalInput = form.querySelector('#totalActividad');
     const calcInfo = form.querySelector('#calc-info');
+
+    // Mostrar/ocultar campos de cuota según checkbox
+    requiereCuotaCheckbox.addEventListener('change', () => {
+      if (requiereCuotaCheckbox.checked) {
+        cuotaFields.style.display = '';
+        cuotaInput.required = true;
+      } else {
+        cuotaFields.style.display = 'none';
+        cuotaInput.required = false;
+        cuotaInput.value = '';
+        totalInput.value = '';
+      }
+    });
 
     // Función para calcular el total automáticamente
     const calcularTotal = async () => {
@@ -251,11 +279,14 @@ const ActividadesPage = {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      const requiereCuotaValue = form.requiereCuota.checked;
+      
       const data = {
         nombre: form.nombre.value.trim(),
         fecha: form.fecha.value,
-        cuotaIndividual: parseFloat(form.cuotaIndividual.value),
-        totalActividad: parseFloat(form.totalActividad.value),
+        requiereCuota: requiereCuotaValue,
+        cuotaIndividual: requiereCuotaValue ? parseFloat(form.cuotaIndividual.value) : 0,
+        totalActividad: requiereCuotaValue ? parseFloat(form.totalActividad.value) : 0,
         fechaMaximaPago: form.fechaMaximaPago.value,
         descripcion: form.descripcion.value.trim(),
         activa: form.activa.checked
