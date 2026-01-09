@@ -437,6 +437,16 @@ body {
   color: #4b5563;
 }
 
+.badge-exento {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.stat-exento {
+  border-left: 4px solid #3b82f6;
+}
+
 /* ===== ALERTS ===== */
 .alert {
   padding: 1rem;

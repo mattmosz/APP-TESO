@@ -153,8 +153,13 @@ const AlumnosPage = {
         p.alumno._id === alumno._id && p.actividad._id === actividad._id
       );
       
+      // Verificar si es exento
+      const esExento = pagosActividad.some(p => 
+        p.monto === 0 && p.observaciones && p.observaciones.toUpperCase().includes('EXENTO')
+      );
+      
       const pagado = pagosActividad.reduce((sum, p) => sum + p.monto, 0);
-      const pendiente = Math.max(0, actividad.cuotaIndividual - pagado);
+      const pendiente = esExento ? 0 : Math.max(0, actividad.cuotaIndividual - pagado);
       
       totalPagado += pagado;
       totalPendiente += pendiente;
@@ -163,7 +168,8 @@ const AlumnosPage = {
         actividad,
         pagado,
         pendiente,
-        pagos: pagosActividad
+        pagos: pagosActividad,
+        esExento
       });
     });
 
@@ -197,22 +203,22 @@ const AlumnosPage = {
                   <span class="actividad-stat-label">Cuota:</span>
                   <span class="actividad-stat-value">$${detalle.actividad.cuotaIndividual.toFixed(2)}</span>
                 </div>
-                <div class="actividad-stat-item ${detalle.pagado > 0 ? 'stat-success' : ''}">
+                <div class="actividad-stat-item ${detalle.esExento ? 'stat-exento' : (detalle.pagado > 0 ? 'stat-success' : '')}">
                   <span class="actividad-stat-label">Pagado:</span>
-                  <span class="actividad-stat-value">$${detalle.pagado.toFixed(2)}</span>
+                  <span class="actividad-stat-value">${detalle.esExento ? '<span class="badge badge-exento">EXENTO</span>' : '$' + detalle.pagado.toFixed(2)}</span>
                 </div>
-                <div class="actividad-stat-item ${detalle.pendiente > 0 ? 'stat-warning' : 'stat-success'}">
+                <div class="actividad-stat-item ${detalle.esExento ? 'stat-exento' : (detalle.pendiente > 0 ? 'stat-warning' : 'stat-success')}">
                   <span class="actividad-stat-label">Pendiente:</span>
-                  <span class="actividad-stat-value">$${detalle.pendiente.toFixed(2)}</span>
+                  <span class="actividad-stat-value">${detalle.esExento ? '<span class="badge badge-exento">N/A</span>' : '$' + detalle.pendiente.toFixed(2)}</span>
                 </div>
               </div>
               ${detalle.pagos.length > 0 ? `
                 <div class="pagos-lista">
-                  <h5>Pagos realizados:</h5>
+                  <h5>${detalle.esExento ? 'Estado:' : 'Pagos realizados:'}</h5>
                   ${detalle.pagos.map(pago => `
                     <div class="pago-item">
                       <span class="pago-fecha">${new Date(pago.fechaPago).toLocaleDateString('es-BO')}</span>
-                      <span class="pago-monto">$${pago.monto.toFixed(2)}</span>
+                      <span class="pago-monto">${pago.monto === 0 && pago.observaciones?.toUpperCase().includes('EXENTO') ? '<span class="badge badge-exento">EXENTO</span>' : '$' + pago.monto.toFixed(2)}</span>
                       ${pago.observaciones ? `<span class="pago-obs">${pago.observaciones}</span>` : ''}
                     </div>
                   `).join('')}

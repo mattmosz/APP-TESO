@@ -77,9 +77,20 @@ router.get('/deudores', async (req, res) => {
     for (const actividad of actividades) {
       const pagos = await Pago.find({ actividad: actividad._id });
       
-      // Calcular total recaudado para esta actividad
+      // Contar alumnos exentos para esta actividad
+      const alumnosExentos = new Set();
+      pagos.forEach(p => {
+        if (p.monto === 0 && p.observaciones && p.observaciones.toUpperCase().includes('EXENTO')) {
+          alumnosExentos.add(p.alumno.toString());
+        }
+      });
+      
+      // Calcular total recaudado (excluyendo pagos exentos que son $0)
       const totalRecaudado = pagos.reduce((sum, pago) => sum + pago.monto, 0);
-      const totalEsperado = actividad.totalActividad || (actividad.cuotaIndividual * alumnos.length);
+      
+      // Total esperado = cuota × (alumnos activos - alumnos exentos)
+      const alumnosQueDebenPagar = alumnos.length - alumnosExentos.size;
+      const totalEsperado = actividad.cuotaIndividual * alumnosQueDebenPagar;
       const faltante = totalEsperado - totalRecaudado;
       
       const deudores = [];
@@ -87,6 +98,15 @@ router.get('/deudores', async (req, res) => {
       for (const alumno of alumnos) {
         // Sumar todos los pagos de este alumno para esta actividad
         const pagosAlumno = pagos.filter(p => p.alumno.toString() === alumno._id.toString());
+        
+        // Verificar si tiene un pago exento (monto 0 con observación EXENTO)
+        const esExento = pagosAlumno.some(p => 
+          p.monto === 0 && p.observaciones && p.observaciones.toUpperCase().includes('EXENTO')
+        );
+        
+        // Si es exento, no es deudor
+        if (esExento) continue;
+        
         const totalPagado = pagosAlumno.reduce((sum, pago) => sum + pago.monto, 0);
         const deuda = actividad.cuotaIndividual - totalPagado;
         
