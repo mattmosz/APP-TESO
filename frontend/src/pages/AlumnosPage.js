@@ -150,7 +150,7 @@ const AlumnosPage = {
 
     actividadesActivas.forEach(actividad => {
       const pagosActividad = this.pagos.filter(p => 
-        p.alumno._id === alumno._id && p.actividad._id === actividad._id
+        p.alumno._id === alumno._id && p.actividad && p.actividad._id === actividad._id
       );
       
       // Verificar si es exento
