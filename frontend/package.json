@@ -8,10 +8,18 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "keywords": ["tesoreria", "vite", "responsive"],
+  "keywords": [
+    "tesoreria",
+    "vite",
+    "responsive"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "vite": "^5.0.8"
+  },
+  "dependencies": {
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8"
   }
 }

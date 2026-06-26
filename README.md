@@ -23,8 +23,11 @@ Sistema web para gestión de tesorería de curso escolar.
 APP TESO/
 ├── frontend/          # Aplicación cliente
 ├── backend/           # API REST
+├── ARCHITECTURE.md    # Diagrama y mapa del codebase
 └── README.md
 ```
+
+Para entender la arquitectura, flujos de datos, modelo ER y dónde hacer cambios, consulta [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Instalación Local
 

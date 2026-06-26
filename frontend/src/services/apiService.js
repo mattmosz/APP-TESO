@@ -180,6 +180,10 @@ class ApiService {
     return this.request(`/dashboard/deudores/${actividadId}`);
   }
 
+  getInformeAnual() {
+    return this.request('/dashboard/informe-anual');
+  }
+
   // POA
   getPOA() {
     return this.request('/poa');

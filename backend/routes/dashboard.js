@@ -3,7 +3,8 @@ import Alumno from '../models/Alumno.js';
 import Actividad from '../models/Actividad.js';
 import Pago from '../models/Pago.js';
 import Egreso from '../models/Egreso.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, adminOnly } from '../middleware/auth.js';
+import { isPagoExento } from '../utils/exento.js';
 
 const router = express.Router();
 
@@ -80,7 +81,7 @@ router.get('/deudores', async (req, res) => {
       // Contar alumnos exentos para esta actividad
       const alumnosExentos = new Set();
       pagos.forEach(p => {
-        if (p.monto === 0 && p.observaciones && p.observaciones.toUpperCase().includes('EXENTO')) {
+        if (isPagoExento(p)) {
           alumnosExentos.add(p.alumno.toString());
         }
       });
@@ -99,10 +100,7 @@ router.get('/deudores', async (req, res) => {
         // Sumar todos los pagos de este alumno para esta actividad
         const pagosAlumno = pagos.filter(p => p.alumno.toString() === alumno._id.toString());
         
-        // Verificar si tiene un pago exento (monto 0 con observación EXENTO)
-        const esExento = pagosAlumno.some(p => 
-          p.monto === 0 && p.observaciones && p.observaciones.toUpperCase().includes('EXENTO')
-        );
+        const esExento = pagosAlumno.some(isPagoExento);
         
         // Si es exento, no es deudor
         if (esExento) continue;
@@ -121,7 +119,7 @@ router.get('/deudores', async (req, res) => {
         }
       }
       
-      if (deudores.length > 0 || faltante > 0) {
+      if (deudores.length > 0) {
         reporte.push({
           actividad: {
             id: actividad._id,
@@ -140,6 +138,82 @@ router.get('/deudores', async (req, res) => {
     }
 
     res.json(reporte);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Informe anual consolidado para exportación PDF (solo tesorera/admin)
+router.get('/informe-anual', adminOnly, async (req, res) => {
+  try {
+    const alumnos = await Alumno.find({ activo: true });
+    const actividades = await Actividad.find().sort({ fecha: 1 });
+    const todosPagos = await Pago.find();
+    const todosEgresos = await Egreso.find();
+
+    const totalIngresos = todosPagos.reduce((sum, p) => sum + p.monto, 0);
+    const totalEgresos = todosEgresos.reduce((sum, e) => sum + e.monto, 0);
+
+    let anioLectivo = new Date().getFullYear().toString();
+    if (actividades.length > 0) {
+      const firstYear = new Date(actividades[0].fecha).getFullYear();
+      const lastYear = new Date(actividades[actividades.length - 1].fecha).getFullYear();
+      anioLectivo = firstYear === lastYear ? `${firstYear}` : `${firstYear}-${lastYear}`;
+    }
+
+    const actividadesDetalle = actividades.map((actividad) => {
+      const pagos = todosPagos.filter(
+        (p) => p.actividad.toString() === actividad._id.toString()
+      );
+      const egresos = todosEgresos.filter(
+        (e) => e.actividad && e.actividad.toString() === actividad._id.toString()
+      );
+
+      const alumnosExentos = new Set();
+      pagos.forEach((p) => {
+        if (isPagoExento(p)) {
+          alumnosExentos.add(p.alumno.toString());
+        }
+      });
+
+      const totalRecaudado = pagos.reduce((sum, p) => sum + p.monto, 0);
+      const totalEgresosActividad = egresos.reduce((sum, e) => sum + e.monto, 0);
+
+      const requiereCuota = actividad.requiereCuota !== false;
+      const totalEsperado = requiereCuota
+        ? actividad.cuotaIndividual * (alumnos.length - alumnosExentos.size)
+        : actividad.totalActividad;
+
+      const cantidadPagos = new Set(
+        pagos.filter((p) => p.monto > 0).map((p) => p.alumno.toString())
+      ).size;
+
+      return {
+        nombre: actividad.nombre,
+        fecha: actividad.fecha,
+        cuotaIndividual: actividad.cuotaIndividual,
+        requiereCuota,
+        totalEsperado,
+        totalRecaudado,
+        totalEgresos: totalEgresosActividad,
+        balance: totalRecaudado - totalEgresosActividad,
+        cantidadPagos,
+        activa: actividad.activa,
+      };
+    });
+
+    res.json({
+      resumen: {
+        numAlumnos: alumnos.length,
+        numActividades: actividades.length,
+        totalIngresos,
+        totalEgresos,
+        montoDisponible: totalIngresos - totalEgresos,
+        anioLectivo,
+        fechaGeneracion: new Date().toISOString(),
+      },
+      actividades: actividadesDetalle,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -1,5 +1,8 @@
 import { createNavbar } from '../components/Navbar.js';
 import { apiService } from '../services/apiService.js';
+import { authService } from '../services/authService.js';
+import { generateInformePDF } from '../services/pdfReportService.js';
+import { showErrorAlert } from '../components/Alert.js';
 
 const ReportesPage = {
   deudores: [],
@@ -12,6 +15,11 @@ const ReportesPage = {
       <div class="card">
         <div class="card-header">
           <h1 class="card-title">Reportes y Estadísticas</h1>
+          ${authService.isAdmin() ? `
+            <button id="btn-descargar-pdf" class="btn btn-primary">
+              Descargar informe PDF
+            </button>
+          ` : ''}
         </div>
         <div class="loading">
           <div class="spinner"></div>
@@ -21,6 +29,11 @@ const ReportesPage = {
 
     container.appendChild(navbar);
     container.appendChild(content);
+
+    if (authService.isAdmin()) {
+      const btnPdf = content.querySelector('#btn-descargar-pdf');
+      btnPdf.addEventListener('click', () => this.descargarInformePDF(btnPdf));
+    }
 
     try {
       this.deudores = await apiService.getDeudores();
@@ -34,9 +47,26 @@ const ReportesPage = {
     }
   },
 
+  async descargarInformePDF(btn) {
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generando...';
+
+    try {
+      const informe = await apiService.getInformeAnual();
+      generateInformePDF(informe);
+    } catch (error) {
+      showErrorAlert(error.message || 'Error al generar el informe PDF');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  },
+
   renderReports(container) {
     const card = container.querySelector('.card');
-    const headerHTML = card.querySelector('.card-header').outerHTML;
+    const header = card.querySelector('.card-header');
+    const headerHTML = header ? header.outerHTML : '';
 
     const totalDeudores = this.deudores.reduce((sum, d) => sum + d.cantidadDeudores, 0);
     const montoTotalDeudas = this.deudores.reduce(
@@ -44,10 +74,7 @@ const ReportesPage = {
       0
     );
 
-    card.innerHTML = `
-      ${headerHTML}
-      
-      ${this.deudores.length === 0 ? `
+    const reportsHTML = this.deudores.length === 0 ? `
         <div class="empty-state">
           <div class="empty-state-icon">✅</div>
           <p>¡Excelente! No hay deudores registrados</p>
@@ -108,8 +135,16 @@ const ReportesPage = {
             </div>
           `).join('')}
         </div>
-      `}
-    `;
+      `;
+
+    card.innerHTML = `${headerHTML}${reportsHTML}`;
+
+    if (authService.isAdmin()) {
+      const btnPdf = card.querySelector('#btn-descargar-pdf');
+      if (btnPdf) {
+        btnPdf.addEventListener('click', () => this.descargarInformePDF(btnPdf));
+      }
+    }
   },
 
   formatDate(dateString) {
