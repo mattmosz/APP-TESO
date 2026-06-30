@@ -1,4 +1,5 @@
 import LoginPage from './pages/LoginPage.js';
+import AccesoPadresPage from './pages/AccesoPadresPage.js';
 import DashboardPage from './pages/DashboardPage.js';
 import AlumnosPage from './pages/AlumnosPage.js';
 import ActividadesPage from './pages/ActividadesPage.js';
@@ -8,10 +9,13 @@ import ReportesPage from './pages/ReportesPage.js';
 import POAPage from './pages/POAPage.js';
 import { authService } from './services/authService.js';
 
+const PUBLIC_ROUTES = ['/login', '/acceso-padres'];
+
 class Router {
   constructor() {
     this.routes = {
       '/login': LoginPage,
+      '/acceso-padres': AccesoPadresPage,
       '/dashboard': DashboardPage,
       '/alumnos': AlumnosPage,
       '/actividades': ActividadesPage,
@@ -35,21 +39,17 @@ class Router {
     const path = window.location.pathname;
     const RouteComponent = this.routes[path] || this.routes['/login'];
 
-    // Proteger rutas privadas
-    if (path !== '/login' && !authService.isAuthenticated()) {
+    if (!PUBLIC_ROUTES.includes(path) && !authService.isAuthenticated()) {
       this.navigate('/login');
       return;
     }
 
-    // Si está logueado y va al login, redirigir al dashboard
     if (path === '/login' && authService.isAuthenticated()) {
       this.navigate('/dashboard');
       return;
     }
 
-    // Restringir páginas para padres de familia
-    const restrictedForPadres = ['/alumnos', '/actividades', '/pagos', '/poa'];
-    if (authService.isPadre() && restrictedForPadres.includes(path)) {
+    if (path === '/acceso-padres' && authService.isAuthenticated()) {
       this.navigate('/dashboard');
       return;
     }

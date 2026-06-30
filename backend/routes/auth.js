@@ -59,4 +59,36 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Acceso público para padres (solo lectura) mediante token en el link
+router.post('/acceso-publico', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!process.env.PUBLIC_ACCESS_TOKEN) {
+      return res.status(503).json({ error: 'Acceso público no configurado' });
+    }
+
+    if (!token || token !== process.env.PUBLIC_ACCESS_TOKEN) {
+      return res.status(401).json({ error: 'Token de acceso inválido' });
+    }
+
+    const usuario = {
+      id: 'acceso-publico',
+      username: 'padres',
+      nombre: 'Padres de familia',
+      rol: 'padre'
+    };
+
+    const jwtToken = jwt.sign(
+      { id: usuario.id, username: usuario.username, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({ token: jwtToken, usuario });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

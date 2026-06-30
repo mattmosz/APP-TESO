@@ -97,6 +97,7 @@ curl -X POST https://tu-backend.onrender.com/api/auth/register \
    ```
    MONGODB_URI=tu_url_de_mongodb_atlas
    JWT_SECRET=un_secreto_muy_largo_y_aleatorio_aqui
+   PUBLIC_ACCESS_TOKEN=genera_una_clave_larga_y_aleatoria_min_32_chars
    NODE_ENV=production
    ```
 
@@ -159,6 +160,21 @@ curl -X POST https://tesoreria-backend.onrender.com/api/auth/register \
 ## 🎉 ¡Listo!
 
 Tu sistema está desplegado. Accede a la URL de Vercel y usa las credenciales que creaste.
+
+## Acceso para padres de familia (solo lectura)
+
+1. En **Render** (backend), configura `PUBLIC_ACCESS_TOKEN` con una clave larga y aleatoria (32+ caracteres).
+2. Comparte este enlace con los padres (usa el mismo valor del token):
+
+   ```text
+   https://tu-app.vercel.app/acceso-padres?token=TU_PUBLIC_ACCESS_TOKEN
+   ```
+
+3. Al abrir el link, obtienen sesión de solo lectura (7 días) sin usuario ni contraseña.
+4. La tesorera sigue entrando por `/login` con usuario y contraseña.
+5. Si cambias `PUBLIC_ACCESS_TOKEN` en Render, el link anterior deja de funcionar para nuevos accesos. Las sesiones ya abiertas siguen activas hasta que expire el JWT.
+
+**Importante:** no configures `PUBLIC_ACCESS_TOKEN` en Vercel; solo va en el backend (Render/Railway).
 
 ## 🔧 Mantenimiento
 

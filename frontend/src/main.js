@@ -1,16 +1,17 @@
 import { router } from './router.js';
 import { authService } from './services/authService.js';
 
-// Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', () => {
-  // Verificar si hay token guardado
-  const token = authService.getToken();
-  
-  if (token) {
-    // Usuario logueado - ir al dashboard
+  const path = window.location.pathname;
+
+  if (path === '/acceso-padres') {
+    router.loadRoute();
+    return;
+  }
+
+  if (authService.getToken()) {
     router.navigate('/dashboard');
   } else {
-    // Usuario no logueado - ir al login
     router.navigate('/login');
   }
 });

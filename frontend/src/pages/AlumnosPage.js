@@ -1,6 +1,7 @@
 import { createNavbar } from '../components/Navbar.js';
 import { createModal, openModal, closeModal } from '../components/Modal.js';
 import { apiService } from '../services/apiService.js';
+import { authService } from '../services/authService.js';
 import { isPagoExento } from '../utils/exento.js';
 
 const AlumnosPage = {
@@ -9,6 +10,7 @@ const AlumnosPage = {
   pagos: [],
 
   async render(container) {
+    const readOnly = authService.isReadOnly();
     const navbar = createNavbar();
     const content = document.createElement('div');
     content.className = 'container';
@@ -16,7 +18,7 @@ const AlumnosPage = {
       <div class="card">
         <div class="card-header">
           <h1 class="card-title">Gestión de Alumnos</h1>
-          <button class="btn btn-primary" id="add-alumno-btn">+ Nuevo Alumno</button>
+          ${!readOnly ? '<button class="btn btn-primary" id="add-alumno-btn">+ Nuevo Alumno</button>' : ''}
         </div>
         <div class="loading">
           <div class="spinner"></div>
@@ -115,6 +117,7 @@ const AlumnosPage = {
 
   renderAlumnoCard(alumno) {
     const estadoAlumno = this.getEstadoAlumno(alumno);
+    const readOnly = authService.isReadOnly();
     
     return `
       <div class="alumno-card">
@@ -131,8 +134,10 @@ const AlumnosPage = {
               <strong>Pagado:</strong> $${estadoAlumno.totalPagado.toFixed(2)} | 
               <strong>Pendiente:</strong> $${estadoAlumno.totalPendiente.toFixed(2)}
             </span>
+            ${!readOnly ? `
             <button class="btn btn-secondary btn-edit" data-id="${alumno._id}" onclick="event.stopPropagation()">Editar</button>
             <button class="btn btn-danger btn-delete" data-id="${alumno._id}" onclick="event.stopPropagation()">Eliminar</button>
+            ` : ''}
           </div>
         </div>
         <div class="alumno-content">

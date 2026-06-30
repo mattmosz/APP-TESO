@@ -1,12 +1,14 @@
 import { createNavbar } from '../components/Navbar.js';
 import { createModal, openModal, closeModal } from '../components/Modal.js';
 import { apiService } from '../services/apiService.js';
+import { authService } from '../services/authService.js';
 import { showSuccessAlert, showErrorAlert, compressImage } from '../components/Alert.js';
 
 const POAPage = {
   poa: null,
 
   async render(container) {
+    const readOnly = authService.isReadOnly();
     const navbar = createNavbar();
     const content = document.createElement('div');
     content.className = 'container';
@@ -14,9 +16,9 @@ const POAPage = {
       <div class="card">
         <div class="card-header">
           <h1 class="card-title">POA (Plan Operativo Anual)</h1>
-          <button class="btn btn-primary" id="upload-poa-btn">
+          ${!readOnly ? `<button class="btn btn-primary" id="upload-poa-btn">
             📤 ${this.poa ? 'Reemplazar POA' : 'Subir POA'}
-          </button>
+          </button>` : ''}
         </div>
         <div class="loading">
           <div class="spinner"></div>
@@ -40,6 +42,7 @@ const POAPage = {
   },
 
   renderContent(container) {
+    const readOnly = authService.isReadOnly();
     const card = container.querySelector('.card');
     const headerHTML = card.querySelector('.card-header').outerHTML;
 
@@ -62,7 +65,7 @@ const POAPage = {
           </div>
           <div class="btn-group" style="margin-top: 1rem;">
             <button class="btn btn-success" id="download-poa-btn">💾 Descargar</button>
-            <button class="btn btn-danger" id="delete-poa-btn">🗑️ Eliminar</button>
+            ${!readOnly ? '<button class="btn btn-danger" id="delete-poa-btn">🗑️ Eliminar</button>' : ''}
           </div>
         </div>
         

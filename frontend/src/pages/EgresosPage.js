@@ -12,13 +12,13 @@ const EgresosPage = {
     const navbar = createNavbar();
     const content = document.createElement('div');
     content.className = 'container';
-    const isPadre = authService.isPadre();
+    const readOnly = authService.isReadOnly();
     
     content.innerHTML = `
       <div class="card">
         <div class="card-header">
           <h1 class="card-title">Gestión de Egresos</h1>
-          ${!isPadre ? '<button class="btn btn-danger" id="add-egreso-btn">+ Registrar Egreso</button>' : ''}
+          ${!readOnly ? '<button class="btn btn-danger" id="add-egreso-btn">+ Registrar Egreso</button>' : ''}
         </div>
         <div class="loading">
           <div class="spinner"></div>
@@ -51,7 +51,7 @@ const EgresosPage = {
   renderTable(container) {
     const card = container.querySelector('.card');
     const headerHTML = card.querySelector('.card-header').outerHTML;
-    const isPadre = authService.isPadre();
+    const readOnly = authService.isReadOnly();
 
     const totalEgresos = this.egresos.reduce((sum, e) => sum + e.monto, 0);
 
@@ -78,7 +78,7 @@ const EgresosPage = {
                 <th>Fecha</th>
                 <th>Actividad</th>
                 <th>Fact.</th>
-                ${!isPadre ? '<th>Acciones</th>' : ''}
+                ${!readOnly ? '<th>Acciones</th>' : ''}
               </tr>
             </thead>
             <tbody>
@@ -94,7 +94,7 @@ const EgresosPage = {
                       : '-'
                     }
                   </td>
-                  ${!isPadre ? `
+                  ${!readOnly ? `
                   <td class="table-actions">
                     <button class="btn btn-secondary btn-edit" data-id="${egreso._id}">Editar</button>
                     <button class="btn btn-danger btn-delete" data-id="${egreso._id}">Eliminar</button>

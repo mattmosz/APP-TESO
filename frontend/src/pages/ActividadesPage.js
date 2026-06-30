@@ -1,11 +1,13 @@
 import { createNavbar } from '../components/Navbar.js';
 import { createModal, openModal, closeModal } from '../components/Modal.js';
 import { apiService } from '../services/apiService.js';
+import { authService } from '../services/authService.js';
 
 const ActividadesPage = {
   actividades: [],
 
   async render(container) {
+    const readOnly = authService.isReadOnly();
     const navbar = createNavbar();
     const content = document.createElement('div');
     content.className = 'container';
@@ -13,7 +15,7 @@ const ActividadesPage = {
       <div class="card">
         <div class="card-header">
           <h1 class="card-title">Gestión de Actividades</h1>
-          <button class="btn btn-primary" id="add-actividad-btn">+ Nueva Actividad</button>
+          ${!readOnly ? '<button class="btn btn-primary" id="add-actividad-btn">+ Nueva Actividad</button>' : ''}
         </div>
         <div class="loading">
           <div class="spinner"></div>
@@ -41,6 +43,7 @@ const ActividadesPage = {
   },
 
   renderTable(container) {
+    const readOnly = authService.isReadOnly();
     const card = container.querySelector('.card');
     const headerHTML = card.querySelector('.card-header').outerHTML;
 
@@ -65,7 +68,7 @@ const ActividadesPage = {
                 <th>Total</th>
                 <th>Fecha Máx. Pago</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                ${!readOnly ? '<th>Acciones</th>' : ''}
               </tr>
             </thead>
             <tbody>
@@ -81,10 +84,12 @@ const ActividadesPage = {
                       ${actividad.activa ? 'Activa' : 'Inactiva'}
                     </span>
                   </td>
+                  ${!readOnly ? `
                   <td class="table-actions">
                     <button class="btn btn-secondary btn-edit" data-id="${actividad._id}">Editar</button>
                     <button class="btn btn-danger btn-delete" data-id="${actividad._id}">Eliminar</button>
                   </td>
+                  ` : ''}
                 </tr>
               `).join('')}
             </tbody>

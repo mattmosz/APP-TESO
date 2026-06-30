@@ -166,9 +166,9 @@ flowchart TD
 
 **Guardias de ruta** en [`router.js`](frontend/src/router.js):
 
-- Sin token → `/login`
+- Sin token → `/login` (excepto `/acceso-padres` y `/login`)
 - Con token en `/login` → `/dashboard`
-- Rol `padre` bloqueado de `/alumnos`, `/actividades`, `/pagos`, `/poa`
+- `/acceso-padres?token=...` → emite JWT rol `padre` vía `POST /api/auth/acceso-publico`
 
 ---
 
@@ -213,7 +213,7 @@ flowchart TD
 
 | Prefijo API | Archivo backend | Métodos | Auth | Admin para escritura | Métodos frontend (`apiService.js`) |
 |-------------|-----------------|---------|------|----------------------|-------------------------------------|
-| `/api/auth` | [`auth.js`](backend/routes/auth.js) | POST register, login | Público | — | `authService.login()` |
+| `/api/auth` | [`auth.js`](backend/routes/auth.js) | POST register, login, acceso-publico | Público | — | `authService.login()`, `loginPublico()` |
 | `/api/alumnos` | [`alumnos.js`](backend/routes/alumnos.js) | GET, POST, PUT, DELETE | JWT | Sí | `getAlumnos`, `createAlumno`, `updateAlumno`, `deleteAlumno` |
 | `/api/actividades` | [`actividades.js`](backend/routes/actividades.js) | GET, POST, PUT, DELETE | JWT | Sí | `getActividades`, `createActividad`, `updateActividad`, `deleteActividad` |
 | `/api/pagos` | [`pagos.js`](backend/routes/pagos.js) | GET, POST, PUT, DELETE + por actividad/alumno | JWT | Sí | `getPagos`, `getPagosByActividad`, `getPagosByAlumno`, `createPago`, `updatePago`, `deletePago` |
@@ -222,7 +222,7 @@ flowchart TD
 | `/api/poa` | [`poa.js`](backend/routes/poa.js) | GET, POST, DELETE | JWT | Sí (POST/DELETE) | `getPOA`, `uploadPOA`, `deletePOA` |
 | `/api/health` | [`server.js`](backend/server.js) | GET | Público | — | `keepAlive.js` (directo) |
 
-**Roles:** `tesorera` (default), `admin`, `padre`. El middleware `adminOnly` bloquea escrituras a usuarios con rol `padre`.
+**Roles:** `tesorera` (default), `admin`, `padre`. El middleware `adminOnly` bloquea escrituras a usuarios con rol `padre`. Los padres entran por `/acceso-padres?token=...` (validado con `PUBLIC_ACCESS_TOKEN` en el backend); ven todas las secciones en solo lectura. El PDF del informe anual solo está disponible para tesorera/admin.
 
 ### Guía para nuevas features
 
@@ -420,7 +420,8 @@ Flujo recomendado al finalizar el año escolar:
 |---------------|-------------|
 | Nueva pantalla / ruta | `frontend/src/pages/`, `router.js`, `Navbar.js` |
 | Nuevo endpoint API | `backend/routes/`, montar en `server.js`, método en `apiService.js` |
-| Cambiar permisos | `middleware/auth.js`, guards en `router.js`, UI en `Navbar.js` |
+| Cambiar permisos | `middleware/auth.js`, guards en `router.js`, UI con `isReadOnly()` |
+| Acceso público padres | `POST /auth/acceso-publico`, `AccesoPadresPage.js`, `PUBLIC_ACCESS_TOKEN` en Render |
 | Nueva entidad de datos | `backend/models/`, nueva ruta, nueva página |
 | Cambiar lógica de deudores | `backend/routes/dashboard.js`, `ReportesPage.js` |
 | Cierre de año / condonar deudores | `scripts/cierre-ano-condonacion-deudores.mongodb.js` (pagos $0 + EXENTO) |

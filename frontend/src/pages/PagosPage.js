@@ -1,6 +1,7 @@
 import { createNavbar } from '../components/Navbar.js';
 import { createModal, openModal, closeModal } from '../components/Modal.js';
 import { apiService } from '../services/apiService.js';
+import { authService } from '../services/authService.js';
 import { showSuccessAlert, showErrorAlert, compressImage } from '../components/Alert.js';
 
 const PagosPage = {
@@ -9,6 +10,7 @@ const PagosPage = {
   actividades: [],
 
   async render(container) {
+    const readOnly = authService.isReadOnly();
     const navbar = createNavbar();
     const content = document.createElement('div');
     content.className = 'container';
@@ -16,7 +18,7 @@ const PagosPage = {
       <div class="card">
         <div class="card-header">
           <h1 class="card-title">Gestión de Pagos</h1>
-          <button class="btn btn-success" id="add-pago-btn">+ Registrar Pago</button>
+          ${!readOnly ? '<button class="btn btn-success" id="add-pago-btn">+ Registrar Pago</button>' : ''}
         </div>
         <div class="loading">
           <div class="spinner"></div>
@@ -48,6 +50,7 @@ const PagosPage = {
   },
 
   renderTable(container) {
+    const readOnly = authService.isReadOnly();
     const card = container.querySelector('.card');
     const headerHTML = card.querySelector('.card-header').outerHTML;
 
@@ -110,7 +113,7 @@ const PagosPage = {
                         <th>Monto</th>
                         <th>Fecha de Pago</th>
                         <th>Comp.</th>
-                        <th>Acciones</th>
+                        ${!readOnly ? '<th>Acciones</th>' : ''}
                       </tr>
                     </thead>
                     <tbody>
@@ -125,10 +128,12 @@ const PagosPage = {
                               : '-'
                             }
                           </td>
+                          ${!readOnly ? `
                           <td class="table-actions">
                             <button class="btn btn-secondary btn-edit" data-id="${pago._id}">Editar</button>
                             <button class="btn btn-danger btn-delete" data-id="${pago._id}">Eliminar</button>
                           </td>
+                          ` : ''}
                         </tr>
                       `).join('')}
                     </tbody>
