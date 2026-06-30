@@ -400,7 +400,7 @@ Flujo recomendado al finalizar el año escolar:
 
 **Condonación de deudores:** insertar o editar un pago con `observaciones` que contenga `"EXENTO"` (ej. `"EXENTO - cierre año lectivo"`). Funciona con pago parcial: el alumno deja de ser deudor y el monto ya pagado no cambia en el recaudado.
 
-**Informe PDF:** `GET /api/dashboard/informe-anual` devuelve resumen del dashboard + actividades en orden cronológico. El frontend genera el PDF con jsPDF en [`frontend/src/services/pdfReportService.js`](frontend/src/services/pdfReportService.js).
+**Informe PDF:** `GET /api/dashboard/informe-anual` devuelve resumen del dashboard, actividades en orden cronológico y listado completo de egresos (con y sin actividad asociada). El frontend genera el PDF con tres secciones (resumen, actividades, egresos) en [`frontend/src/services/pdfReportService.js`](frontend/src/services/pdfReportService.js).
 
 ---
 

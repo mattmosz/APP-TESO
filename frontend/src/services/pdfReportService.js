@@ -19,7 +19,7 @@ function formatDateTime(dateString) {
 export function generateInformePDF(informe) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  const { resumen, actividades } = informe;
+  const { resumen, actividades, egresos = [] } = informe;
 
   doc.setFontSize(18);
   doc.text('Informe de Tesorería — 8vo C', pageWidth / 2, 20, { align: 'center' });
@@ -74,6 +74,48 @@ export function generateInformePDF(informe) {
     columnStyles: {
       0: { cellWidth: 22 },
       1: { cellWidth: 50 },
+    },
+  });
+
+  const afterActividades = doc.lastAutoTable.finalY + 12;
+  doc.setFontSize(14);
+  doc.text('Detalle de Egresos (orden cronológico)', 14, afterActividades);
+
+  const egresosBody = egresos.map((e) => [
+    formatDate(e.fecha),
+    e.nombre,
+    formatMoney(e.monto),
+    e.actividadNombre || 'General',
+    e.descripcion?.trim() ? e.descripcion : '—',
+  ]);
+
+  if (egresos.length > 0) {
+    egresosBody.push([
+      '',
+      'TOTAL',
+      formatMoney(resumen.totalEgresos),
+      '',
+      '',
+    ]);
+  }
+
+  autoTable(doc, {
+    startY: afterActividades + 4,
+    head: [['Fecha', 'Concepto', 'Monto', 'Actividad', 'Descripción']],
+    body: egresosBody.length > 0 ? egresosBody : [['—', 'Sin egresos registrados', '—', '—', '—']],
+    theme: 'striped',
+    headStyles: { fillColor: [41, 98, 255] },
+    margin: { left: 14, right: 14 },
+    styles: { fontSize: 9, cellPadding: 2 },
+    columnStyles: {
+      0: { cellWidth: 22 },
+      1: { cellWidth: 40 },
+      4: { cellWidth: 45 },
+    },
+    didParseCell(data) {
+      if (egresos.length > 0 && data.row.index === egresosBody.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+      }
     },
   });
 

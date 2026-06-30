@@ -149,10 +149,12 @@ router.get('/informe-anual', adminOnly, async (req, res) => {
     const alumnos = await Alumno.find({ activo: true });
     const actividades = await Actividad.find().sort({ fecha: 1 });
     const todosPagos = await Pago.find();
-    const todosEgresos = await Egreso.find();
+    const egresosDetalle = await Egreso.find()
+      .populate('actividad', 'nombre')
+      .sort({ fecha: 1 });
 
     const totalIngresos = todosPagos.reduce((sum, p) => sum + p.monto, 0);
-    const totalEgresos = todosEgresos.reduce((sum, e) => sum + e.monto, 0);
+    const totalEgresos = egresosDetalle.reduce((sum, e) => sum + e.monto, 0);
 
     let anioLectivo = new Date().getFullYear().toString();
     if (actividades.length > 0) {
@@ -165,8 +167,8 @@ router.get('/informe-anual', adminOnly, async (req, res) => {
       const pagos = todosPagos.filter(
         (p) => p.actividad.toString() === actividad._id.toString()
       );
-      const egresos = todosEgresos.filter(
-        (e) => e.actividad && e.actividad.toString() === actividad._id.toString()
+      const egresos = egresosDetalle.filter(
+        (e) => e.actividad && e.actividad._id.toString() === actividad._id.toString()
       );
 
       const alumnosExentos = new Set();
@@ -202,6 +204,14 @@ router.get('/informe-anual', adminOnly, async (req, res) => {
       };
     });
 
+    const egresos = egresosDetalle.map((e) => ({
+      nombre: e.nombre,
+      monto: e.monto,
+      fecha: e.fecha,
+      actividadNombre: e.actividad?.nombre ?? null,
+      descripcion: e.descripcion || '',
+    }));
+
     res.json({
       resumen: {
         numAlumnos: alumnos.length,
@@ -213,6 +223,7 @@ router.get('/informe-anual', adminOnly, async (req, res) => {
         fechaGeneracion: new Date().toISOString(),
       },
       actividades: actividadesDetalle,
+      egresos,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
